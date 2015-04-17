@@ -9,7 +9,7 @@
 int main(int argc, char* argv[])
 {
     allocator_init(16 * 1024);
-    pointer list =
+    Pointer list =
         make_pair(make_integer(1),
             make_pair(make_integer(2),
                 make_pair(make_integer(3),

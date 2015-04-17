@@ -15,32 +15,32 @@
     X(symbol)
 
 typedef enum {
-    #define X(name) type_##name,
+    #define X(name) Type_##name,
 
     TYPES_XLIST
 
     #undef X
 
     TYPE_COUNT,
-} type;
+} Type;
 
-typedef struct _pointer {
+typedef struct _Pointer {
     unsigned type   :  3;
     unsigned offset : 29;
-} pointer;
+} Pointer;
 
-extern pointer  make_integer(int value);
-extern int      get_integer(pointer ptr);
+extern Pointer  make_integer(int value);
+extern int      get_integer(Pointer ptr);
 
-extern pointer  make_nil();
+extern Pointer  make_nil();
 
-extern pointer  make_pair(pointer car, pointer cdr);
-extern pointer  get_car(pointer ptr);
-extern pointer  get_cdr(pointer ptr);
+extern Pointer  make_pair(Pointer car, Pointer cdr);
+extern Pointer  get_car(Pointer ptr);
+extern Pointer  get_cdr(Pointer ptr);
 
-extern pointer  stop_and_copy(pointer ptr);
+extern Pointer  stop_and_copy(Pointer ptr);
 
-extern void print(pointer ptr);
+extern void print(Pointer ptr);
 
 #endif // INCLUDE_TYPES_H
 

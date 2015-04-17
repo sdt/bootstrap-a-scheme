@@ -9,107 +9,107 @@
 #define VALUE(ptr, type) (type*)allocator_getPointer((ptr).offset);
 
 typedef struct {
-    pointer relocated;
-} value_base;
+    Pointer relocated;
+} Value_base;
 
 typedef struct {
-    value_base base;
+    Value_base base;
     int value;
-} value_integer;
+} Value_integer;
 
 typedef struct {
-    value_base base;
-    pointer car;
-    pointer cdr;
-} value_pair;
+    Value_base base;
+    Pointer car;
+    Pointer cdr;
+} Value_pair;
 
-static pointer nil = { type_nil, 0 };
+static Pointer nil = { Type_nil, 0 };
 
-static pointer make_pointer(type type, byte* raw)
+static Pointer make_pointer(Type type, byte* raw)
 {
-    pointer ptr = { type, allocator_getOffset(raw) };
+    Pointer ptr = { type, allocator_getOffset(raw) };
     return ptr;
 }
 
-static value_base* allocate_value(int size)
+static Value_base* allocate_value(int size)
 {
-    value_base* base = (value_base*) allocator_alloc(size);
+    Value_base* base = (Value_base*) allocator_alloc(size);
     base->relocated = nil;
     return base;
 }
 
-pointer make_integer(int value)
+Pointer make_integer(int value)
 {
-    value_integer* raw = ALLOC(value_integer);
+    Value_integer* raw = ALLOC(Value_integer);
     raw->value = value;
 
-    return make_pointer(type_integer, (byte*) raw);
+    return make_pointer(Type_integer, (byte*) raw);
 }
 
-int get_integer(pointer ptr)
+int get_integer(Pointer ptr)
 {
-    assert(ptr.type == type_integer);
-    value_integer* raw = VALUE(ptr, value_integer);
+    assert(ptr.type == Type_integer);
+    Value_integer* raw = VALUE(ptr, Value_integer);
     return raw->value;
 }
 
-pointer make_nil()
+Pointer make_nil()
 {
     return nil;
 }
 
-pointer make_pair(pointer car, pointer cdr)
+Pointer make_pair(Pointer car, Pointer cdr)
 {
-    value_pair* raw = ALLOC(value_pair);
+    Value_pair* raw = ALLOC(Value_pair);
     raw->car = car;
     raw->cdr = cdr;
 
-    return make_pointer(type_pair, (byte*) raw);
+    return make_pointer(Type_pair, (byte*) raw);
 }
 
-pointer get_car(pointer ptr)
+Pointer get_car(Pointer ptr)
 {
-    assert(ptr.type == type_pair);
-    value_pair* raw = VALUE(ptr, value_pair);
+    assert(ptr.type == Type_pair);
+    Value_pair* raw = VALUE(ptr, Value_pair);
     return raw->car;
 }
 
-pointer get_cdr(pointer ptr)
+Pointer get_cdr(Pointer ptr)
 {
-    assert(ptr.type == type_pair);
-    value_pair* raw = VALUE(ptr, value_pair);
+    assert(ptr.type == Type_pair);
+    Value_pair* raw = VALUE(ptr, Value_pair);
     return raw->cdr;
 }
 
-void set_car(pointer ptr, pointer car)
+void set_car(Pointer ptr, Pointer car)
 {
-    assert(ptr.type == type_pair);
-    value_pair* raw = VALUE(ptr, value_pair);
+    assert(ptr.type == Type_pair);
+    Value_pair* raw = VALUE(ptr, Value_pair);
     raw->car = car;
 }
 
-void set_cdr(pointer ptr, pointer cdr)
+void set_cdr(Pointer ptr, Pointer cdr)
 {
-    assert(ptr.type == type_pair);
-    value_pair* raw = VALUE(ptr, value_pair);
+    assert(ptr.type == Type_pair);
+    Value_pair* raw = VALUE(ptr, Value_pair);
     raw->cdr = cdr;
 }
 
-pointer copy(pointer ptr)
+Pointer copy(Pointer ptr)
 {
-    if (ptr.type == type_nil) {
+    if (ptr.type == Type_nil) {
         return ptr;
     }
 
-    value_base* base = VALUE(ptr, value_base);
-    if (base->relocated.type == type_nil) {
+    Value_base* base = VALUE(ptr, Value_base);
+    if (base->relocated.type == Type_nil) {
         switch (ptr.type) {
-            case type_integer: {
+            case Type_integer: {
                 base->relocated =
                     make_integer(get_integer(ptr));
                 break;
             }
-            case type_pair: {
+            case Type_pair: {
                 base->relocated = make_pair(nil, nil);
                 set_cdr(base->relocated,
                     copy(get_cdr(ptr)));
@@ -126,7 +126,7 @@ pointer copy(pointer ptr)
     return base->relocated;
 }
 
-pointer stop_and_copy(pointer ptr)
+Pointer stop_and_copy(Pointer ptr)
 {
     int before = allocator_bytesAvailable();
 
@@ -139,20 +139,20 @@ pointer stop_and_copy(pointer ptr)
     return ptr;
 }
 
-void print_value(pointer ptr)
+void print_value(Pointer ptr)
 {
     switch (ptr.type) {
-        case type_nil: {
+        case Type_nil: {
             printf("nil");
             break;
         }
 
-        case type_integer: {
+        case Type_integer: {
             printf("%d", get_integer(ptr));
             break;
         }
 
-        case type_pair: {
+        case Type_pair: {
             printf("[");
             print_value(get_car(ptr));
             printf(", ");
@@ -163,7 +163,7 @@ void print_value(pointer ptr)
     }
 }
 
-void print(pointer ptr)
+void print(Pointer ptr)
 {
     print_value(ptr);
     printf("\n");
