@@ -3,13 +3,23 @@
 
 #include "forward.h"
 
+/* Use an X-macro to define the types. This list will get reused in a number of
+ * places. see: http://en.wikipedia.org/wiki/X_Macro
+ */
+#define TYPES_XLIST \
+    X(nil)          \
+    X(integer)      \
+    X(pair)         \
+    X(boolean)      \
+    X(string)       \
+    X(symbol)
+
 typedef enum {
-    type_nil,
-    type_integer,
-    type_pair,
-    type_bool,
-    type_string,
-    type_symbol,
+    #define X(name) type_##name,
+
+    TYPES_XLIST
+
+    #undef X
 
     TYPE_COUNT,
 } type;
