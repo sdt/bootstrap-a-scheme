@@ -5,17 +5,25 @@
 
 int main(int argc, char* argv[])
 {
-    Allocator* alloc = allocator_create(16 * 1024 * 1024);
+    Allocator* allocator = allocator_create(16 * 1024 * 1024);
     pointer list =
-        make_pair(alloc, make_integer(alloc, 1),
-                  make_pair(alloc, make_integer(alloc, 2),
-                       make_pair(alloc, make_integer(alloc, 3),
-                                 make_nil())));
+        make_pair(allocator, make_integer(allocator, 1),
+            make_pair(allocator, make_integer(allocator, 2),
+                make_pair(allocator, make_integer(allocator, 3),
+                    make_pair(allocator, make_integer(allocator, 4),
+                                 make_nil()))));
 
-    printf("%d\n", get_integer(alloc,
-                               get_car(alloc, list)));
-    printf("%d\n", get_integer(alloc,
-                               get_car(alloc,
-                                       get_cdr(alloc, list))));
+    for (int i = 0; i < 2; i++) {
+        print(allocator, list);
+        list = stop_and_copy(allocator, list);
+    }
+    print(allocator, list);
+
+    list = make_integer(allocator, 456);
+
+    print(allocator, list);
+    list = stop_and_copy(allocator, list);
+    print(allocator, list);
+
     return 0;
 }

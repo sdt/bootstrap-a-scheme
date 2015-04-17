@@ -4,10 +4,10 @@
 #include "forward.h"
 
 typedef enum {
-    type_bool,
-    type_integer,
     type_nil,
+    type_integer,
     type_pair,
+    type_bool,
     type_string,
     type_symbol,
 
@@ -27,6 +27,10 @@ extern pointer  make_nil();
 extern pointer  make_pair(Allocator* allocator, pointer car, pointer cdr);
 extern pointer  get_car(Allocator* allocator, pointer ptr);
 extern pointer  get_cdr(Allocator* allocator, pointer ptr);
+
+extern pointer stop_and_copy(Allocator* allocator, pointer ptr);
+
+extern void print(Allocator* allocator, pointer ptr);
 
 #endif // INCLUDE_TYPES_H
 
