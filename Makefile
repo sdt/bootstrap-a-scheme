@@ -5,15 +5,15 @@ CCFLAGS=-Wall
 
 .PHONY:	all clean
 
-.SUFFIXES: .cpp .o
+.SUFFIXES: .c .o
 
-all: bas
+all: bas deps
 
-.deps: *.c *.h
+deps: *.c *.h
 	$(CC) $(CCFLAGS) -MM *.c > .deps
 
 bas: $(OBJECTS)
-	$(LD) $^ -o $@ $(LDFLAGS)
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 .c.o:
 	$(CC) $(CCFLAGS) -c $< -o $@

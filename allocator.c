@@ -1,15 +1,20 @@
+#include "allocator.h"
+
 #include <stdlib.h>
 
-typedef unsigned char byte;
+#define ALIGNMENT_BITS  2
+#define ALIGNMENT       (1<<(ALIGNMENT_BITS))
+#define ALIGNMENT_MASK  (ALIGNMENT-1)
+#define ALIGN(size)     (((size)+ALIGNMENT-1)&~(ALIGNMENT_MASK))
 
-typedef struct {
+struct _Allocator {
     byte* pool[2];
     int activePool;
     int poolSize;
     int bytesUsed;
-} Allocator;
+};
 
-Allocator* allocator_init(int poolSize)
+Allocator* allocator_create(int poolSize)
 {
     Allocator* allocator = (Allocator*) malloc(sizeof(Allocator) + 2*poolSize);
 
@@ -22,13 +27,14 @@ Allocator* allocator_init(int poolSize)
     return allocator;
 }
 
-void allocator_free(Allocator* allocator)
+void allocator_delete(Allocator* allocator)
 {
     free(allocator);
 }
 
 byte* allocator_alloc(Allocator* allocator, int size)
 {
+    size = ALIGN(size);
     int bytesAvailable = allocator->poolSize - allocator->bytesUsed;
     if (bytesAvailable < size) {
         return NULL;
@@ -43,4 +49,15 @@ void allocator_swap(Allocator* allocator)
 {
     allocator->activePool ^= 1;
     allocator->bytesUsed = 0;
+}
+
+unsigned allocator_getOffset(Allocator* allocator, byte* pointer)
+{
+    return (pointer - allocator->pool[0]) >> ALIGNMENT_BITS;
+}
+
+byte* allocator_getPointer(Allocator* allocator, unsigned offset)
+{
+    return allocator->pool[0] + (offset << ALIGNMENT_BITS);
+
 }
