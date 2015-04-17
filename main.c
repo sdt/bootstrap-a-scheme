@@ -10,22 +10,22 @@ int main(int argc, char* argv[])
 {
     allocator_init(16 * 1024);
     Pointer list =
-        make_pair(make_integer(1),
-            make_pair(make_integer(2),
-                make_pair(make_integer(3),
-                    make_pair(make_integer(4),
-                                 make_nil()))));
+        pair_make(integer_make(1),
+            pair_make(integer_make(2),
+                pair_make(integer_make(3),
+                    pair_make(integer_make(4),
+                                 nil_make()))));
 
     for (int i = 0; i < 2; i++) {
         print(list);
-        list = stop_and_copy(list);
+        list = stopAndCopy(list);
     }
     print(list);
 
-    list = make_integer(456);
+    list = integer_make(456);
 
     print(list);
-    list = stop_and_copy(list);
+    list = stopAndCopy(list);
     print(list);
 
     return 0;

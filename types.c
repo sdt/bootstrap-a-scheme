@@ -1,12 +1,14 @@
 #include "types.h"
+
 #include "allocator.h"
+#include "debug.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#define ALLOC(type)      ((type*)allocate_value(sizeof(type)))
-#define VALUE(ptr, type) (type*)allocator_getPointer((ptr).offset);
+#define ALLOC(type)      ((type*)allocateValue(sizeof(type)))
+#define VALUE(ptr, type) ((Value_##type*)getValue(ptr, Type_##type))
 
 typedef struct {
     Pointer relocated;
@@ -23,75 +25,98 @@ typedef struct {
     Pointer cdr;
 } Value_pair;
 
+static const char* typeName[] = {
+    #define X(name) #name,
+
+    TYPES_XLIST
+
+    #undef X
+};
+
 static Pointer nil = { Type_nil, 0 };
 
-static Pointer make_pointer(Type type, byte* raw)
+static const char* getTypeName(int type) {
+    if ((type >= 0) && (type < Type_COUNT)) {
+        return typeName[type];
+    }
+    return "(invalid type)";
+}
+
+static Pointer makePointer(Type type, byte* raw)
 {
     Pointer ptr = { type, allocator_getOffset(raw) };
     return ptr;
 }
 
-static Value_base* allocate_value(int size)
+static Value_base* allocateValue(int size)
 {
     Value_base* base = (Value_base*) allocator_alloc(size);
     base->relocated = nil;
     return base;
 }
 
-Pointer make_integer(int value)
+static Value_base* getValue(Pointer ptr, Type type)
+{
+    ASSERT(ptr.type == type, "Expected %s, got %s",
+           getTypeName(type), getTypeName(ptr.type));
+
+    return (Value_base*) allocator_getPointer(ptr.offset);
+}
+
+Pointer integer_make(int value)
 {
     Value_integer* raw = ALLOC(Value_integer);
     raw->value = value;
 
-    return make_pointer(Type_integer, (byte*) raw);
+    return makePointer(Type_integer, (byte*) raw);
 }
 
-int get_integer(Pointer ptr)
+int integer_get(Pointer ptr)
 {
     assert(ptr.type == Type_integer);
-    Value_integer* raw = VALUE(ptr, Value_integer);
+    Value_integer* raw = VALUE(ptr, integer);
     return raw->value;
 }
 
-Pointer make_nil()
+Pointer nil_make()
 {
     return nil;
 }
 
-Pointer make_pair(Pointer car, Pointer cdr)
+Pointer pair_make(Pointer car, Pointer cdr)
 {
     Value_pair* raw = ALLOC(Value_pair);
     raw->car = car;
     raw->cdr = cdr;
 
-    return make_pointer(Type_pair, (byte*) raw);
+    return makePointer(Type_pair, (byte*) raw);
 }
 
-Pointer get_car(Pointer ptr)
+Pointer pair_getCar(Pointer ptr)
 {
     assert(ptr.type == Type_pair);
-    Value_pair* raw = VALUE(ptr, Value_pair);
+    Value_pair* raw = VALUE(ptr, pair);
     return raw->car;
 }
 
-Pointer get_cdr(Pointer ptr)
+Pointer pair_getCdr(Pointer ptr)
 {
     assert(ptr.type == Type_pair);
-    Value_pair* raw = VALUE(ptr, Value_pair);
+    Value_pair* raw = VALUE(ptr, pair);
     return raw->cdr;
 }
 
-void set_car(Pointer ptr, Pointer car)
+void pair_setCar(Pointer ptr, Pointer car)
 {
     assert(ptr.type == Type_pair);
-    Value_pair* raw = VALUE(ptr, Value_pair);
+    Value_pair* raw = VALUE(ptr, pair);
     raw->car = car;
 }
 
-void set_cdr(Pointer ptr, Pointer cdr)
+void pair_setCdr(Pointer ptr, Pointer cdr)
 {
     assert(ptr.type == Type_pair);
-    Value_pair* raw = VALUE(ptr, Value_pair);
+    Value_pair* raw = VALUE(ptr, pair);
     raw->cdr = cdr;
 }
 
@@ -101,20 +126,20 @@ Pointer copy(Pointer ptr)
         return ptr;
     }
 
-    Value_base* base = VALUE(ptr, Value_base);
+    Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
     if (base->relocated.type == Type_nil) {
         switch (ptr.type) {
             case Type_integer: {
                 base->relocated =
-                    make_integer(get_integer(ptr));
+                    integer_make(integer_get(ptr));
                 break;
             }
             case Type_pair: {
-                base->relocated = make_pair(nil, nil);
-                set_cdr(base->relocated,
-                    copy(get_cdr(ptr)));
-                set_car(base->relocated,
-                    copy(get_car(ptr)));
+                base->relocated = pair_make(nil, nil);
+                pair_setCdr(base->relocated,
+                    copy(pair_getCdr(ptr)));
+                pair_setCar(base->relocated,
+                    copy(pair_getCar(ptr)));
                 break;
             }
             default: {
@@ -126,7 +151,7 @@ Pointer copy(Pointer ptr)
     return base->relocated;
 }
 
-Pointer stop_and_copy(Pointer ptr)
+Pointer stopAndCopy(Pointer ptr)
 {
     int before = allocator_bytesAvailable();
 
@@ -139,7 +164,7 @@ Pointer stop_and_copy(Pointer ptr)
     return ptr;
 }
 
-void print_value(Pointer ptr)
+void value_print(Pointer ptr)
 {
     switch (ptr.type) {
         case Type_nil: {
@@ -148,15 +173,15 @@ void print_value(Pointer ptr)
         }
 
         case Type_integer: {
-            printf("%d", get_integer(ptr));
+            printf("%d", integer_get(ptr));
             break;
         }
 
         case Type_pair: {
             printf("[");
-            print_value(get_car(ptr));
+            value_print(pair_getCar(ptr));
             printf(", ");
-            print_value(get_cdr(ptr));
+            value_print(pair_getCdr(ptr));
             printf("]");
             break;
         }
@@ -165,6 +190,6 @@ void print_value(Pointer ptr)
 
 void print(Pointer ptr)
 {
-    print_value(ptr);
+    value_print(ptr);
     printf("\n");
 }

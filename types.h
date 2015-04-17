@@ -21,7 +21,7 @@ typedef enum {
 
     #undef X
 
-    TYPE_COUNT,
+    Type_COUNT,
 } Type;
 
 typedef struct _Pointer {
@@ -29,18 +29,18 @@ typedef struct _Pointer {
     unsigned offset : 29;
 } Pointer;
 
-extern Pointer  make_integer(int value);
-extern int      get_integer(Pointer ptr);
+extern Pointer  integer_make(int value);
+extern int      integer_get(Pointer ptr);
 
-extern Pointer  make_nil();
+extern Pointer  nil_make();
 
-extern Pointer  make_pair(Pointer car, Pointer cdr);
-extern Pointer  get_car(Pointer ptr);
-extern Pointer  get_cdr(Pointer ptr);
+extern Pointer  pair_make(Pointer car, Pointer cdr);
+extern Pointer  pair_getCar(Pointer ptr);
+extern Pointer  pair_getCdr(Pointer ptr);
 
-extern Pointer  stop_and_copy(Pointer ptr);
+extern Pointer  stopAndCopy(Pointer ptr);
 
-extern void print(Pointer ptr);
+extern void     print(Pointer ptr);
 
 #endif // INCLUDE_TYPES_H
 
