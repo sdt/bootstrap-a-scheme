@@ -3,12 +3,12 @@
 
 #include "forward.h"
 
-extern Allocator*   allocator_create(int poolSize);
-extern void         allocator_delete(Allocator* allocator);
-extern byte*        allocator_alloc(Allocator* allocator, int size);
-extern void         allocator_swap(Allocator* allocator);
-extern unsigned     allocator_getOffset(Allocator* allocator, byte* pointer);
-extern byte*        allocator_getPointer(Allocator* allocator, unsigned offset);
-extern int          allocator_bytesAvailable(Allocator* allocator);
+extern void         allocator_init(int heapSize);
+extern void         allocator_deinit();
+extern byte*        allocator_alloc(int size);
+extern void         allocator_swapHeaps();
+extern int          allocator_bytesAvailable();
+extern unsigned     allocator_getOffset(byte* pointer);
+extern byte*        allocator_getPointer(unsigned offset);
 
 #endif // INCLUDE_ALLOCATOR_H

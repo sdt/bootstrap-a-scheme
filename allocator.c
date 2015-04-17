@@ -8,75 +8,74 @@
 #define ALIGNMENT       (1<<(ALIGNMENT_BITS))
 #define ALIGNMENT_MASK  (ALIGNMENT-1)
 #define ALIGN(size)     (((size)+ALIGNMENT-1)&~(ALIGNMENT_MASK))
+#define ALIGN_PTR(ptr)  ((void*)ALIGN((long)(ptr)))
 
-struct _Allocator {
-    byte* pool[2];
-    int activePool;
-    int poolSize;
+typedef struct {
+    byte* heap[2];
+    int activeHeap;
+    int heapSize;
     int bytesUsed;
-};
+    byte* data;
+} Allocator;
 
-Allocator* allocator_create(int poolSize)
+static Allocator allocator;
+
+void allocator_init(int heapSize)
 {
-    Allocator* allocator = (Allocator*) malloc(sizeof(Allocator) + 2*poolSize);
-
-    allocator->pool[0] = (byte*)(allocator + 1);
-    allocator->pool[1] = allocator->pool[0] + poolSize;
-    allocator->activePool = 0;
-    allocator->poolSize = poolSize;
-    allocator->bytesUsed = 0;
-
-    //memset(allocator->pool[0], 0xDD, poolSize * 2);
-
-    return allocator;
+    allocator.data = (byte*) malloc(heapSize * 2 + ALIGNMENT - 1);
+    allocator.heap[0] = ALIGN_PTR(allocator.data);
+    allocator.heap[1] = allocator.heap[0] + heapSize;
+    allocator.activeHeap = 0;
+    allocator.heapSize = heapSize;
+    allocator.bytesUsed = 0;
 }
 
-void print_allocator(Allocator* allocator)
+void allocator_deinit()
 {
-    fprintf(stderr, "%d-byte pools @ (0x%p/0x%p) %d active, %d used\n",
-        allocator->poolSize,
-        allocator->pool[0],
-        allocator->pool[1],
-        allocator->activePool,
-        allocator->bytesUsed);
+    free(allocator.data);
 }
 
-void allocator_delete(Allocator* allocator)
-{
-    free(allocator);
-}
-
-byte* allocator_alloc(Allocator* allocator, int size)
+byte* allocator_alloc(int size)
 {
     size = ALIGN(size);
-    int bytesAvailable = allocator->poolSize - allocator->bytesUsed;
+    int bytesAvailable = allocator.heapSize - allocator.bytesUsed;
     if (bytesAvailable < size) {
         return NULL;
     }
 
-    byte* block = allocator->pool[allocator->activePool] + allocator->bytesUsed;
-    allocator->bytesUsed += size;
+    byte* block = allocator.heap[allocator.activeHeap] + allocator.bytesUsed;
+    allocator.bytesUsed += size;
     return block;
 }
 
-void allocator_swap(Allocator* allocator)
+void allocator_swapHeaps()
 {
-    allocator->activePool ^= 1;
-    allocator->bytesUsed = 0;
-    //memset(allocator->pool[allocator->activePool], 0xCC, allocator->poolSize);
+    allocator.activeHeap ^= 1;
+    allocator.bytesUsed = 0;
 }
 
-unsigned allocator_getOffset(Allocator* allocator, byte* pointer)
+unsigned allocator_getOffset(byte* pointer)
 {
-    return (pointer - allocator->pool[0]) >> ALIGNMENT_BITS;
+    return (pointer - allocator.heap[0]) >> ALIGNMENT_BITS;
 }
 
-byte* allocator_getPointer(Allocator* allocator, unsigned offset)
+byte* allocator_getPointer(unsigned offset)
 {
-    return allocator->pool[0] + (offset << ALIGNMENT_BITS);
+    return allocator.heap[0] + (offset << ALIGNMENT_BITS);
 }
 
-int allocator_bytesAvailable(Allocator* allocator)
+int allocator_bytesAvailable()
 {
-    return allocator->poolSize - allocator->bytesUsed;
+    return allocator.heapSize - allocator.bytesUsed;
 }
+
+void allocator_dumpInfo(FILE* fh)
+{
+    fprintf(fh, "%d-byte heaps @ (0x%p/0x%p) %d active, %d used\n",
+        allocator.heapSize,
+        allocator.heap[0],
+        allocator.heap[1],
+        allocator.activeHeap,
+        allocator.bytesUsed);
+}
+
