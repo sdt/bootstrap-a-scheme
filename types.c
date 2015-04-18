@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define ALLOC(type)      ((type*)allocateValue(sizeof(type)))
 #define VALUE(ptr, type) ((Value_##type*)getValue(ptr, Type_##type))
@@ -24,6 +25,11 @@ typedef struct {
     Value_base base;
     Pointer value[2];
 } Value_pair;
+
+typedef struct {
+    Value_base base;
+    char value[1];  // more space is allocated at the end
+} Value_string;
 
 static const char* typeName[] = {
     #define X(name) #name,
@@ -120,6 +126,25 @@ void pair_set(Pointer ptr, int index, Pointer value)
     raw->value[index] = value;
 }
 
+Pointer string_alloc(int length)
+{
+    int totalSize = sizeof(Value_string) + length;
+    return makePointer(Type_string, (byte*) allocateValue(totalSize));
+}
+
+const char* string_get(Pointer ptr)
+{
+    Value_string* raw = VALUE(ptr, string);
+    return raw->value;
+}
+
+Pointer string_make(const char* s)
+{
+    Pointer ptr = string_alloc(strlen(s));
+    strcpy((char*) string_get(ptr), s);
+    return ptr;
+}
+
 Pointer copy(Pointer ptr)
 {
     if (ptr.type == Type_nil) {
@@ -144,8 +169,13 @@ Pointer copy(Pointer ptr)
                 }
                 break;
             }
+            case Type_string: {
+                Value_string* raw = RAWVAL(ptr, string);
+                base->relocated = string_make(raw->value);
+                break;
+            }
             default: {
-                assert(0);
+                ASSERT(0, "Unexpected %s value", getTypeName(ptr.type));
                 break;
             }
         }
@@ -185,6 +215,16 @@ void value_print(Pointer ptr)
             printf(", ");
             value_print(pair_get(ptr, 1));
             printf("]");
+            break;
+        }
+
+        case Type_string: {
+            printf("\"%s\"", string_get(ptr));
+            break;
+        }
+
+        default: {
+            ASSERT(0, "Unexpected %s value", getTypeName(ptr.type));
             break;
         }
     }

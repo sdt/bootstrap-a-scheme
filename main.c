@@ -6,7 +6,7 @@
 #define SIZEOF(type)    \
     printf("sizeof %s = %lu\n", #type, sizeof(type))
 
-static Pointer make_list(int min, int max)
+static Pointer list_make(int min, int max)
 {
     Pointer list = nil_make();
     while (min <= max) {
@@ -18,7 +18,8 @@ static Pointer make_list(int min, int max)
 int main(int argc, char* argv[])
 {
     allocator_init(16 * 1024);
-    Pointer list = make_list(1, 10);
+    Pointer list = list_make(1, 10);
+    list = pair_make(string_make("my-list"), list);
     print(list);
 
     for (int i = 0; i < 1; i++) {
