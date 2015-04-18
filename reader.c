@@ -11,8 +11,8 @@
 #define ARRAY_SIZE(a)   (sizeof(a)/sizeof((a)[0]))
 
 typedef struct {
-    char*       cursor;
-    const char* token;
+    char* cursor;
+    char* token;
 } Tokeniser;
 
 static void skipSpace(Tokeniser* t)
@@ -32,30 +32,38 @@ static int tokeniser_eof(Tokeniser* t)
     return t->token == NULL;
 }
 
+static char* strDup(const char* begin, const char* end)
+{
+    int length = end - begin;
+    char* dup = malloc(length+1);
+    memcpy(dup, begin, length);
+    dup[length] = 0;
+    return dup;
+}
+
 static void tokeniser_advance(Tokeniser* t)
 {
     ASSERT(!tokeniser_eof(t), "next() on empty tokeniser");
 
     skipSpace(t);
     if (*t->cursor == 0) {
+        if (t->token != NULL) {
+            free(t->token);
+        }
         t->token = NULL;
         return;
     }
 
-    // These must be single chars, but we specify them as strings to we can
-    // return them directly.
-    const char* punctChars[] = {
-        "(", ")", "'"
-    };
-    for (int i = 0; i < ARRAY_SIZE(punctChars); i++) {
-        if (*t->cursor == punctChars[i][0]) {
+    const char* punctChars = "()'";
+    for (int i = 0; punctChars[i] != 0; i++) {
+        if (*t->cursor == punctChars[i]) {
             t->cursor++;
-            t->token = punctChars[i];
+            t->token = strDup(punctChars + i, punctChars + i + 1);
             return;
         }
     }
 
-    t->token = t->cursor;
+    const char* ret = t->cursor;
     if (*t->cursor == '"') {
         // Scan out a string.
         *t->cursor = ':'; //XXX: TEMPORARY
@@ -63,7 +71,7 @@ static void tokeniser_advance(Tokeniser* t)
             switch (*t->cursor) {
             case '"':
                 // Clobber the closing "
-                *wp = 0;
+                t->token = strDup(ret, wp);
                 t->cursor++;
                 return;
 
@@ -89,12 +97,12 @@ static void tokeniser_advance(Tokeniser* t)
         // Scan out a token
         for (t->cursor++; *t->cursor != 0; t->cursor++) {
             if (isspace(*t->cursor)) {
-                *t->cursor++ = 0;
+                t->token = strDup(ret, t->cursor++);
                 return;
             }
             switch (*t->cursor) {
             case '(': case ')': case '\'': case ' ': case '\t':
-                *t->cursor++ = 0;
+                t->token = strDup(ret, t->cursor);
                 return;
             }
         }
