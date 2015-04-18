@@ -9,6 +9,7 @@
 
 #define ALLOC(type)      ((type*)allocateValue(sizeof(type)))
 #define VALUE(ptr, type) ((Value_##type*)getValue(ptr, Type_##type))
+#define RAWVAL(ptr, type) ((Value_##type*)getValueRaw(ptr, Type_##type))
 
 typedef struct {
     Pointer relocated;
@@ -54,12 +55,27 @@ static Value_base* allocateValue(int size)
     return base;
 }
 
-static Value_base* getValue(Pointer ptr, Type type)
+static Value_base* getValueRaw(Pointer ptr, Type type)
 {
     ASSERT(ptr.type == type, "Expected %s, got %s",
            getTypeName(type), getTypeName(ptr.type));
 
     return (Value_base*) allocator_getPointer(ptr.offset);
+}
+
+static Value_base* getValue(Pointer ptr, Type type)
+{
+    Value_base* base = getValueRaw(ptr, type);
+    if (base->relocated.type != Type_nil) {
+        // This value has been moved to the other heap.
+        base = (Value_base*) allocator_getPointer(base->relocated.offset);
+
+        // I don't quite see what stops this from happening, but if it does,
+        // it's not a good sign.
+        ASSERT(base->relocated.type == Type_nil,
+            "%s value has moved heaps twice", getTypeName(type));
+    }
+    return base;
 }
 
 Pointer integer_make(int value)
@@ -112,16 +128,19 @@ Pointer copy(Pointer ptr)
 
     Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
     if (base->relocated.type == Type_nil) {
+        // Be careful to copy RAWVAL's in here, we don't want to be chasing
+        // broken hearts.
         switch (ptr.type) {
             case Type_integer: {
-                base->relocated =
-                    integer_make(integer_get(ptr));
+                Value_integer* raw = RAWVAL(ptr, integer);
+                base->relocated = integer_make(raw->value);
                 break;
             }
             case Type_pair: {
                 base->relocated = pair_make(nil, nil);
+                Value_pair* raw = RAWVAL(ptr, pair);
                 for (int i = 0; i < 2; i++) {
-                    pair_set(base->relocated, i, copy(pair_get(ptr, i)));
+                    pair_set(base->relocated, i, copy(raw->value[i]));
                 }
                 break;
             }
