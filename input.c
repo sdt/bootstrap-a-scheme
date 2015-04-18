@@ -1,4 +1,4 @@
-#include "readLine.h"
+#include "input.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,7 +12,7 @@
 
 const char* historyPath = NULL;
 
-const char* readLine(const char* prompt)
+const char* getInput(const char* prompt)
 {
     if (historyPath == NULL) {
         historyPath = tilde_expand(HISTORY_FILE);
