@@ -21,8 +21,7 @@ typedef struct {
 
 typedef struct {
     Value_base base;
-    Pointer car;
-    Pointer cdr;
+    Pointer value[2];
 } Value_pair;
 
 static const char* typeName[] = {
@@ -73,7 +72,6 @@ Pointer integer_make(int value)
 
 int integer_get(Pointer ptr)
 {
-    assert(ptr.type == Type_integer);
     Value_integer* raw = VALUE(ptr, integer);
     return raw->value;
 }
@@ -86,38 +84,24 @@ Pointer nil_make()
 Pointer pair_make(Pointer car, Pointer cdr)
 {
     Value_pair* raw = ALLOC(Value_pair);
-    raw->car = car;
-    raw->cdr = cdr;
+    raw->value[0] = car;
+    raw->value[1] = cdr;
 
     return makePointer(Type_pair, (byte*) raw);
 }
 
-Pointer pair_getCar(Pointer ptr)
+Pointer pair_get(Pointer ptr, int index)
 {
-    assert(ptr.type == Type_pair);
+    ASSERT((index & 1) == index, "Pair index must be 0 or 1, not %d", index);
     Value_pair* raw = VALUE(ptr, pair);
-    return raw->car;
+    return raw->value[index];
 }
 
-Pointer pair_getCdr(Pointer ptr)
+void pair_set(Pointer ptr, int index, Pointer value)
 {
-    assert(ptr.type == Type_pair);
+    ASSERT((index & 1) == index, "Pair index must be 0 or 1, not %d", index);
     Value_pair* raw = VALUE(ptr, pair);
-    return raw->cdr;
-}
-
-void pair_setCar(Pointer ptr, Pointer car)
-{
-    assert(ptr.type == Type_pair);
-    Value_pair* raw = VALUE(ptr, pair);
-    raw->car = car;
-}
-
-void pair_setCdr(Pointer ptr, Pointer cdr)
-{
-    assert(ptr.type == Type_pair);
-    Value_pair* raw = VALUE(ptr, pair);
-    raw->cdr = cdr;
+    raw->value[index] = value;
 }
 
 Pointer copy(Pointer ptr)
@@ -136,10 +120,9 @@ Pointer copy(Pointer ptr)
             }
             case Type_pair: {
                 base->relocated = pair_make(nil, nil);
-                pair_setCdr(base->relocated,
-                    copy(pair_getCdr(ptr)));
-                pair_setCar(base->relocated,
-                    copy(pair_getCar(ptr)));
+                for (int i = 0; i < 2; i++) {
+                    pair_set(base->relocated, i, copy(pair_get(ptr, i)));
+                }
                 break;
             }
             default: {
@@ -179,9 +162,9 @@ void value_print(Pointer ptr)
 
         case Type_pair: {
             printf("[");
-            value_print(pair_getCar(ptr));
+            value_print(pair_get(ptr, 0));
             printf(", ");
-            value_print(pair_getCdr(ptr));
+            value_print(pair_get(ptr, 1));
             printf("]");
             break;
         }

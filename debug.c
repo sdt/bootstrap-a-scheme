@@ -10,7 +10,7 @@ void assert_verbose(int cond, const char* file, int line, const char* fmt, ...)
         return;
     }
 
-    fprintf(stderr, "Assertion failed %s(%d): ", file, line);
+    fprintf(stderr, "Internal error %s(%d): ", file, line);
 
     va_list ap;
     va_start(ap, fmt);

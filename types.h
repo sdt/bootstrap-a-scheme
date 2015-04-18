@@ -35,8 +35,7 @@ extern int      integer_get(Pointer ptr);
 extern Pointer  nil_make();
 
 extern Pointer  pair_make(Pointer car, Pointer cdr);
-extern Pointer  pair_getCar(Pointer ptr);
-extern Pointer  pair_getCdr(Pointer ptr);
+extern Pointer  pair_get(Pointer ptr, int index);
 
 extern Pointer  stopAndCopy(Pointer ptr);
 
