@@ -44,7 +44,8 @@ static Pointer root = { Type_nil, 0 };
 
 static void collectGarbage();
 
-static const char* getTypeName(int type) {
+static const char* getTypeName(int type)
+{
     if ((type >= 0) && (type < Type_COUNT)) {
         return typeName[type];
     }
@@ -233,11 +234,39 @@ static void collectGarbage()
     fprintf(stderr, "Garbage collected %d -> %d: %d bytes freed\n", before, after, after - before);
 }
 
+void value_print(Pointer ptr);
+void list_print(Pointer ptr)
+{
+    while (1) {
+        // Three cases:
+        // (X, nil)  -> "X"
+        // (X, pair) -> "X list_print"
+        // (X, *)    -> "X . value_print"
+        value_print(pair_get(ptr, 0));
+
+        Pointer cdr = pair_get(ptr, 1);
+        switch (cdr.type) {
+        case Type_nil:
+            return;
+
+        case Type_pair:
+            putchar(' ');
+            ptr = cdr;
+            break;
+
+        default:
+            printf(" . ");
+            value_print(cdr);
+            return;
+        }
+    }
+}
+
 void value_print(Pointer ptr)
 {
     switch (ptr.type) {
         case Type_nil: {
-            printf("nil");
+            printf("()");
             break;
         }
 
@@ -247,11 +276,9 @@ void value_print(Pointer ptr)
         }
 
         case Type_pair: {
-            printf("[");
-            value_print(pair_get(ptr, 0));
-            printf(", ");
-            value_print(pair_get(ptr, 1));
-            printf("]");
+            putchar('(');
+            list_print(ptr);
+            putchar(')');
             break;
         }
 
