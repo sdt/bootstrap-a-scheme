@@ -40,6 +40,9 @@ static const char* typeName[] = {
 };
 
 static Pointer nil = { Type_nil, 0 };
+static Pointer root = { Type_nil, 0 };
+
+static void collectGarbage();
 
 static const char* getTypeName(int type) {
     if ((type >= 0) && (type < Type_COUNT)) {
@@ -57,6 +60,11 @@ static Pointer makePointer(Type type, byte* raw)
 static Value_base* allocateValue(int size)
 {
     Value_base* base = (Value_base*) allocator_alloc(size);
+    if (base == NULL) {
+        collectGarbage();
+        base = (Value_base*) allocator_alloc(size);
+        ASSERT(base != NULL, "Out of memory");
+    }
     base->relocated = nil;
     return base;
 }
@@ -84,6 +92,25 @@ static Value_base* getValue(Pointer ptr, Type type)
     return base;
 }
 
+static Pointer followPointer(Pointer ptr)
+{
+    if (ptr.type == Type_nil) {
+        return ptr;
+    }
+
+    Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
+    if (base->relocated.type != Type_nil) {
+        // This value has been moved to the other heap.
+        base = (Value_base*) allocator_getPointer(base->relocated.offset);
+
+        // I don't quite see what stops this from happening, but if it does,
+        // it's not a good sign.
+        ASSERT(base->relocated.type == Type_nil,
+            "%s value has moved heaps twice", getTypeName(ptr.type));
+    }
+    return makePointer(ptr.type, (byte*) base);
+}
+
 Pointer integer_make(int value)
 {
     Value_integer* raw = ALLOC(Value_integer);
@@ -106,8 +133,10 @@ Pointer nil_make()
 Pointer pair_make(Pointer car, Pointer cdr)
 {
     Value_pair* raw = ALLOC(Value_pair);
-    raw->value[0] = car;
-    raw->value[1] = cdr;
+
+    // Use followPointer here in case we've got a broken heart.
+    raw->value[0] = followPointer(car);
+    raw->value[1] = followPointer(cdr);
 
     return makePointer(Type_pair, (byte*) raw);
 }
@@ -124,6 +153,16 @@ void pair_set(Pointer ptr, int index, Pointer value)
     ASSERT((index & 1) == index, "Pair index must be 0 or 1, not %d", index);
     Value_pair* raw = VALUE(ptr, pair);
     raw->value[index] = value;
+}
+
+void root_set(Pointer ptr)
+{
+    root = ptr;
+}
+
+Pointer root_get()
+{
+    return root;
 }
 
 Pointer string_alloc(int length)
@@ -183,17 +222,15 @@ Pointer copy(Pointer ptr)
     return base->relocated;
 }
 
-Pointer stopAndCopy(Pointer ptr)
+static void collectGarbage()
 {
     int before = allocator_bytesAvailable();
 
     allocator_swapHeaps();
-    ptr = copy(ptr);
+    root = copy(root);
 
     int after = allocator_bytesAvailable();
     fprintf(stderr, "Garbage collected %d -> %d: %d bytes freed\n", before, after, after - before);
-
-    return ptr;
 }
 
 void value_print(Pointer ptr)

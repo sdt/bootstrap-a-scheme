@@ -37,11 +37,12 @@ extern Pointer      nil_make();
 extern Pointer      pair_make(Pointer car, Pointer cdr);
 extern Pointer      pair_get(Pointer ptr, int index);
 
+extern Pointer      root_get();
+extern void         root_set(Pointer ptr);
+
 extern Pointer      string_make(const char* value);
 extern Pointer      string_alloc(int length);
 extern const char*  string_get(Pointer ptr);
-
-extern Pointer      stopAndCopy(Pointer ptr);
 
 extern void         print(Pointer ptr);
 

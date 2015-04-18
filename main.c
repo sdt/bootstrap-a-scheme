@@ -17,25 +17,13 @@ static Pointer list_make(int min, int max)
 
 int main(int argc, char* argv[])
 {
-    allocator_init(16 * 1024);
-    Pointer list = list_make(1, 10);
-    list = pair_make(string_make("my-list"), list);
-    print(list);
+    allocator_init(1 * 1024);
 
-    for (int i = 0; i < 1; i++) {
-        Pointer oldList = list;
-        list = stopAndCopy(list);
-        print(list);
-        print(oldList);
+    for (int x = 0; x < 1000; x++) {
+        root_set(pair_make(integer_make(x), root_get()));
+        integer_make(x);
+        print(root_get());
     }
-
-    list = integer_make(456);
-
-    print(list);
-    Pointer oldList = list;
-    list = stopAndCopy(list);
-    print(list);
-    print(oldList);
 
     return 0;
 }
