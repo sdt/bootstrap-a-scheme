@@ -1,5 +1,6 @@
 #include "allocator.h"
 #include "input.h"
+#include "reader.h"
 #include "types.h"
 
 #include <stdio.h>
@@ -13,7 +14,8 @@ int main(int argc, char* argv[])
 
     const char* input;
     while ((input = getInput("bas> ")) != NULL) {
-        printf("%s\n", input);
+        Pointer list = readLine(input);
+        print(list);
     }
 
     return 0;

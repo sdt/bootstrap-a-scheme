@@ -19,13 +19,13 @@ static void skip_ws(Tokeniser* t)
     }
 }
 
-int tokeniser_eof(Tokeniser* t)
+static int tokeniser_eof(Tokeniser* t)
 {
     skip_ws(t);
     return *t->cursor == 0;
 }
 
-const char* tokeniser_next(Tokeniser* t)
+static const char* tokeniser_next(Tokeniser* t)
 {
     if (tokeniser_eof(t)) {
         return NULL;
@@ -46,11 +46,13 @@ const char* tokeniser_next(Tokeniser* t)
     const char* ret = t->cursor;
     if (*t->cursor == '"') {
         // Scan out a string.
+        *t->cursor = ':'; //XXX: TEMPORARY
         for (char* wp = ++t->cursor; *t->cursor != 0; t->cursor++) {
             switch (*t->cursor) {
             case '"':
                 // Clobber the closing "
-                *t->cursor = 0;
+                *wp = 0;
+                t->cursor++;
                 return ret;
 
             case '\\':
@@ -88,4 +90,18 @@ const char* tokeniser_next(Tokeniser* t)
     return ret;
 }
 
+static Pointer readForm(Tokeniser* t)
+{
+    if (tokeniser_eof(t)) {
+        return nil_make();
+    }
 
+    Pointer string = string_make(tokeniser_next(t));
+    return pair_make(string, readForm(t));
+}
+
+Pointer readLine(char* input)
+{
+    Tokeniser t = { input, input };
+    return readForm(&t);
+}
