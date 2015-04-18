@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 {
     allocator_init(1 * 1024);
 
-    const char* input;
+    char* input;
     while ((input = getInput("bas> ")) != NULL) {
         Pointer list = readLine(input);
         print(list);

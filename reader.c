@@ -66,7 +66,7 @@ static void tokeniser_advance(Tokeniser* t)
     const char* ret = t->cursor;
     if (*t->cursor == '"') {
         // Scan out a string.
-        *t->cursor = ':'; //XXX: TEMPORARY
+        t->cursor++;
         for (char* wp = ++t->cursor; *t->cursor != 0; t->cursor++) {
             switch (*t->cursor) {
             case '"':
@@ -186,8 +186,7 @@ static Pointer readForm(Tokeniser* t)
     if (readInteger(token, &intValue)) {
         return integer_make(intValue);
     }
-    //TODO: this should be a symbol
-    return string_make(token);
+    return symbol_make(token);
 }
 
 Pointer readLine(char* input)

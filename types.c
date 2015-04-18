@@ -31,6 +31,11 @@ typedef struct {
     char value[1];  // more space is allocated at the end
 } Value_string;
 
+typedef struct {
+    Value_base base;
+    char value[1];  // more space is allocated at the end
+} Value_symbol;
+
 static const char* typeName[] = {
     #define X(name) #name,
 
@@ -40,7 +45,8 @@ static const char* typeName[] = {
 };
 
 static Pointer nil = { Type_nil, 0 };
-static Pointer root = { Type_nil, 0 };
+static Pointer symbols = { Type_nil, 0 };
+static Pointer rootEnv = { Type_nil, 0 };
 
 static void collectGarbage();
 
@@ -156,16 +162,6 @@ void pair_set(Pointer ptr, int index, Pointer value)
     raw->value[index] = value;
 }
 
-void root_set(Pointer ptr)
-{
-    root = ptr;
-}
-
-Pointer root_get()
-{
-    return root;
-}
-
 Pointer string_alloc(int length)
 {
     int totalSize = sizeof(Value_string) + length;
@@ -182,6 +178,29 @@ Pointer string_make(const char* s)
 {
     Pointer ptr = string_alloc(strlen(s));
     strcpy((char*) string_get(ptr), s);
+    return ptr;
+}
+
+const char* symbol_get(Pointer ptr)
+{
+    Value_symbol* raw = VALUE(ptr, symbol);
+    return raw->value;
+}
+
+Pointer symbol_make(const char* s)
+{
+    // Check if this symbol already exists.
+    for (Pointer ptr = symbols; ptr.type != Type_nil; ptr = pair_get(ptr, 1)) {
+        Pointer sym = pair_get(ptr, 0);
+        if (strcmp(s, symbol_get(sym)) == 0) {
+            return sym;
+        }
+    }
+
+    // Create a new symbol, and add it to the symbols list.
+    Pointer ptr = string_make(s);
+    ptr.type = Type_symbol;
+    symbols = pair_make(ptr, symbols);
     return ptr;
 }
 
@@ -214,6 +233,14 @@ Pointer copy(Pointer ptr)
                 base->relocated = string_make(raw->value);
                 break;
             }
+            case Type_symbol: {
+                Value_symbol* raw = RAWVAL(ptr, symbol);
+
+                // Create the symbol as if it were a string.
+                base->relocated = string_make(raw->value);
+                base->relocated.type = Type_symbol;
+                break;
+            }
             default: {
                 ASSERT(0, "Unexpected %s value", getTypeName(ptr.type));
                 break;
@@ -228,7 +255,8 @@ static void collectGarbage()
     int before = allocator_bytesAvailable();
 
     allocator_swapHeaps();
-    root = copy(root);
+    symbols = copy(symbols);
+    rootEnv = copy(rootEnv);
 
     int after = allocator_bytesAvailable();
     fprintf(stderr, "Garbage collected %d -> %d: %d bytes freed\n", before, after, after - before);
@@ -284,6 +312,11 @@ void value_print(Pointer ptr)
 
         case Type_string: {
             printf("\"%s\"", string_get(ptr));
+            break;
+        }
+
+        case Type_symbol: {
+            printf("%s", symbol_get(ptr));
             break;
         }
 

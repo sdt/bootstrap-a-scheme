@@ -12,7 +12,7 @@
 
 const char* historyPath = NULL;
 
-const char* getInput(const char* prompt)
+char* getInput(const char* prompt)
 {
     if (historyPath == NULL) {
         historyPath = tilde_expand(HISTORY_FILE);
@@ -22,7 +22,7 @@ const char* getInput(const char* prompt)
         }
     }
 
-    const char *line = readline(prompt);
+    char *line = readline(prompt);
     if (line != NULL) {
         add_history(line); // Add input to in-memory history
         append_history(1, historyPath);
