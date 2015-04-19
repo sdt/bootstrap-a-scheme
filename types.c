@@ -52,6 +52,8 @@ static const char* typeName[] = {
 };
 
 static Pointer nil     = { Type_nil, 0 };
+static Pointer false_value = { Type_boolean, 0 };
+static Pointer true_value  = { Type_boolean, 1 };
 static Pointer symbols = { Type_nil, 0 };
 static Pointer rootEnv = { Type_nil, 0 };
 
@@ -136,6 +138,17 @@ Pointer pointer_follow(Pointer ptr)
             "%s value has moved heaps twice", type_name(ptr.type));
     }
     return makePointer(ptr.type, (byte*) base);
+}
+
+Pointer boolean_make(int value)
+{
+    return value ? true_value : false_value;
+}
+
+int boolean_get(Pointer ptr)
+{
+    type_check(ptr, Type_boolean);
+    return ptr.offset;
 }
 
 Pointer builtin_make(int offset)
@@ -384,6 +397,11 @@ void value_print(Pointer ptr)
     switch (ptr.type) {
         case Type_nil: {
             printf("()");
+            break;
+        }
+
+        case Type_boolean: {
+            printf("%s", boolean_get(ptr) ? "true" : "false");
             break;
         }
 

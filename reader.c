@@ -186,6 +186,12 @@ static Pointer readForm(Tokeniser* t)
     if (strEq(token, "nil")) {
         return nil_make();
     }
+    if (strEq(token, "true")) {
+        return boolean_make(1);
+    }
+    if (strEq(token, "false")) {
+        return boolean_make(0);
+    }
     int intValue;
     if (readInteger(token, &intValue)) {
         return integer_make(intValue);

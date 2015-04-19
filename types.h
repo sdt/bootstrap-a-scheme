@@ -34,6 +34,9 @@ typedef struct _Pointer {
 extern void         types_init();
 extern Pointer      getRootEnv();
 
+extern Pointer      boolean_make(int value);
+extern int          boolean_get();
+
 extern Pointer      builtin_apply(Pointer ptr, Pointer args, Pointer env);
 extern Pointer      builtin_make(int index);
 
