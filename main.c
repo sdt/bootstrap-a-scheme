@@ -39,7 +39,7 @@ Pointer eval(Pointer ast, Pointer env)
         return ast;
 
     case Type_symbol:
-        return env_get(env, ast);
+        return env_get(env, pointer_follow(ast));
 
     case Type_pair:
         op = pair_get(ast, 0);
@@ -52,12 +52,12 @@ Pointer eval(Pointer ast, Pointer env)
         }
 
         // If we get here, no special forms applied.
-        ast  = eval_list(ast, env);
+        ast  = eval_list(ast, env = pointer_follow(env));
         op   = pair_get(ast, 0);
         args = pair_get(ast, 1);
 
         if (op.type == Type_builtin) {
-            return builtin_apply(op, args, env);
+            return builtin_apply(op, args, pointer_follow(env));
         }
         throw("%s is not applicable", type_name(op.type));
 
@@ -71,6 +71,7 @@ static Pointer eval_list(Pointer list, Pointer env)
         return list;
     }
 
-    Pointer car = eval(pair_get(list, 0), env);
-    return pair_make(car, eval_list(pair_get(list, 1), env));
+    Pointer car = eval(pair_get(list, 0), env = pointer_follow(env));
+    return pair_make(car,
+                     eval_list(pair_get(list, 1), pointer_follow(env)));
 }

@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ALLOC(type)      ((type*)allocateValue(sizeof(type)))
-#define VALUE(ptr, type) ((Value_##type*)getValue(ptr, Type_##type))
-#define RAWVAL(ptr, type) ((Value_##type*)getValueRaw(ptr, Type_##type))
+#define ALLOC(type)             ((type*)allocateValue(sizeof(type)))
+#define DEREF(ptr, type)        ((Value_##type*)getValue(ptr, Type_##type))
+#define DEREF_RAW(ptr, type)    ((Value_##type*)getValueRaw(ptr, Type_##type))
 
 typedef struct {
     Pointer relocated;
@@ -106,20 +106,10 @@ static Value_base* getValueRaw(Pointer ptr, Type type)
 
 static Value_base* getValue(Pointer ptr, Type type)
 {
-    Value_base* base = getValueRaw(ptr, type);
-    if (base->relocated.type != Type_nil) {
-        // This value has been moved to the other heap.
-        base = (Value_base*) allocator_getPointer(base->relocated.offset);
-
-        // I don't quite see what stops this from happening, but if it does,
-        // it's not a good sign.
-        ASSERT(base->relocated.type == Type_nil,
-            "%s value has moved heaps twice", type_name(type));
-    }
-    return base;
+    return getValueRaw(pointer_follow(ptr), type);
 }
 
-static Pointer followPointer(Pointer ptr)
+Pointer pointer_follow(Pointer ptr)
 {
     if (!type_isObject(ptr.type)) {
         return ptr;
@@ -127,6 +117,7 @@ static Pointer followPointer(Pointer ptr)
 
     Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
     if (base->relocated.type != Type_nil) {
+        printf("Following broken heart for: %s\n", type_name(ptr.type));
         // This value has been moved to the other heap.
         base = (Value_base*) allocator_getPointer(base->relocated.offset);
 
@@ -160,7 +151,7 @@ Pointer integer_make(int value)
 
 int integer_get(Pointer ptr)
 {
-    Value_integer* raw = VALUE(ptr, integer);
+    Value_integer* raw = DEREF(ptr, integer);
     return raw->value;
 }
 
@@ -173,9 +164,9 @@ Pointer pair_make(Pointer car, Pointer cdr)
 {
     Value_pair* raw = ALLOC(Value_pair);
 
-    // Use followPointer here in case we've got a broken heart.
-    raw->value[0] = followPointer(car);
-    raw->value[1] = followPointer(cdr);
+    // Use pointer_follow here in case we've got a broken heart.
+    raw->value[0] = pointer_follow(car);
+    raw->value[1] = pointer_follow(cdr);
 
     return makePointer(Type_pair, (byte*) raw);
 }
@@ -183,14 +174,14 @@ Pointer pair_make(Pointer car, Pointer cdr)
 Pointer pair_get(Pointer ptr, int index)
 {
     ASSERT((index & 1) == index, "Pair index must be 0 or 1, not %d", index);
-    Value_pair* raw = VALUE(ptr, pair);
+    Value_pair* raw = DEREF(ptr, pair);
     return raw->value[index];
 }
 
 void pair_set(Pointer ptr, int index, Pointer value)
 {
     ASSERT((index & 1) == index, "Pair index must be 0 or 1, not %d", index);
-    Value_pair* raw = VALUE(ptr, pair);
+    Value_pair* raw = DEREF(ptr, pair);
     raw->value[index] = value;
 }
 
@@ -202,7 +193,7 @@ Pointer string_alloc(int length)
 
 const char* string_get(Pointer ptr)
 {
-    Value_string* raw = VALUE(ptr, string);
+    Value_string* raw = DEREF(ptr, string);
     return raw->value;
 }
 
@@ -215,7 +206,7 @@ Pointer string_make(const char* s)
 
 const char* symbol_get(Pointer ptr)
 {
-    Value_symbol* raw = VALUE(ptr, symbol);
+    Value_symbol* raw = DEREF(ptr, symbol);
     return raw->value;
 }
 
@@ -244,29 +235,29 @@ Pointer copy(Pointer ptr)
 
     Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
     if (base->relocated.type == Type_nil) {
-        // Be careful to copy RAWVAL's in here, we don't want to be chasing
-        // broken hearts.
+        // Be careful to use DEREF_RAW's in here, we don't want to be chasing
+        // broken hearts (because they are all broken).
         switch (ptr.type) {
             case Type_integer: {
-                Value_integer* raw = RAWVAL(ptr, integer);
+                Value_integer* raw = DEREF_RAW(ptr, integer);
                 base->relocated = integer_make(raw->value);
                 break;
             }
             case Type_pair: {
                 base->relocated = pair_make(nil, nil);
-                Value_pair* raw = RAWVAL(ptr, pair);
+                Value_pair* raw = DEREF_RAW(ptr, pair);
                 for (int i = 0; i < 2; i++) {
                     pair_set(base->relocated, i, copy(raw->value[i]));
                 }
                 break;
             }
             case Type_string: {
-                Value_string* raw = RAWVAL(ptr, string);
+                Value_string* raw = DEREF_RAW(ptr, string);
                 base->relocated = string_make(raw->value);
                 break;
             }
             case Type_symbol: {
-                Value_symbol* raw = RAWVAL(ptr, symbol);
+                Value_symbol* raw = DEREF_RAW(ptr, symbol);
 
                 // Create the symbol as if it were a string.
                 base->relocated = string_make(raw->value);
