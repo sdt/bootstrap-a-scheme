@@ -74,6 +74,9 @@ Pointer eval(Pointer ast, Pointer env)
         if (op.type == Type_builtin) {
             return builtin_apply(op, args, env);
         }
+        if (op.type == Type_lambda) {
+            return lambda_apply(op, args, env);
+        }
         throw("%s is not applicable", type_name(op.type));
 
         return ast;

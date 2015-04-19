@@ -85,6 +85,10 @@ int type_isObject(Type type) {
         && type != Type_builtin;
 }
 
+int type_isList(Type type) {
+    return type == Type_pair || type == Type_nil;
+}
+
 static Pointer makePointer(Type type, byte* raw)
 {
     Pointer ptr = { type, allocator_getOffset(raw) };
@@ -158,6 +162,27 @@ int integer_get(Pointer ptr)
 {
     Value_integer* raw = DEREF(ptr, integer);
     return raw->value;
+}
+
+Pointer lambda_apply(Pointer ptr, Pointer args, Pointer env)
+{
+    Pointer inner = env_make(env);
+    Pointer params = lambda_getParams(ptr);
+
+    if (type_isList(params.type)) {
+        while (params.type == Type_pair) {
+            env_set(inner, pair_get(params, 0), pair_get(args, 0));
+            inner = pointer_follow(inner);
+            params = pair_get(params, 1);
+            args   = pair_get(args, 1);
+        }
+    }
+    else {
+        env_set(inner, params, args);
+        inner = pointer_follow(inner);
+    }
+    extern Pointer eval(Pointer, Pointer);
+    return eval(lambda_getBody(ptr), inner);
 }
 
 Pointer lambda_make(Pointer params, Pointer body, Pointer env)
