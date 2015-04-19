@@ -81,14 +81,21 @@ Pointer type_check(Pointer ptr, Type expected)
     return ptr;
 }
 
-int type_isObject(Type type) {
+int type_isObject(Type type)
+{
     return type != Type_nil
         && type != Type_boolean
         && type != Type_builtin;
 }
 
-int type_isList(Type type) {
+int type_isList(Type type)
+{
     return type == Type_pair || type == Type_nil;
+}
+
+int pointer_isFalse(Pointer ptr)
+{
+    return (ptr.type == Type_boolean) && (ptr.offset == 0);
 }
 
 static Pointer makePointer(Type type, byte* raw)

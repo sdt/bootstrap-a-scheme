@@ -59,6 +59,19 @@ Pointer eval(Pointer ast, Pointer env)
                 return pointer_follow(value);
             }
 
+            if (strcmp(sym, "if") == 0) {
+                Pointer cond = pair_get(args, 0); args = pair_get(args, 1);
+                Pointer thenRet = pair_get(args, 0); args = pair_get(args, 1);
+                Pointer elseRet = (args.type == Type_pair) ? pair_get(args, 0)
+                                                        : args;
+                if (!pointer_isFalse(eval(cond, env))) {
+                    return eval(thenRet, env);
+                }
+                else {
+                    return eval(elseRet, env);
+                }
+            }
+
             if (strcmp(sym, "lambda") == 0) {
                 Pointer params = pair_get(args, 0); args = pair_get(args, 1);
                 Pointer body   = pair_get(args, 0); args = pair_get(args, 1);

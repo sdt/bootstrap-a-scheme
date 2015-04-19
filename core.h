@@ -7,6 +7,7 @@
     X("cons",       cons)           \
     X("car",        car)            \
     X("cdr",        cdr)            \
+    X("empty?",     isEmpty)        \
     X("+",          add)
 
 /*

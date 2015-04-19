@@ -62,6 +62,7 @@ extern Pointer      symbol_make(const char* value);
 extern const char*  symbol_get(Pointer ptr);
 
 extern Pointer      pointer_follow(Pointer ptr);
+extern int          pointer_isFalse(Pointer ptr);
 
 extern Pointer      type_check(Pointer ptr, Type expected);
 extern int          type_isObject(Type type);

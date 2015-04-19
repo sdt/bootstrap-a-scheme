@@ -90,3 +90,10 @@ HANDLER(cdr)
     Pointer pair = ARG(pair);
     return pair_get(pair, 1);
 }
+
+HANDLER(isEmpty)
+{
+    CHECK_ARGS_COUNT(1);
+    Pointer a = ARGPTR();
+    return boolean_make(a.type == Type_nil);
+}
