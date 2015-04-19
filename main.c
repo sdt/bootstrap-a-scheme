@@ -1,12 +1,10 @@
 #include "allocator.h"
+#include "exception.h"
 #include "input.h"
 #include "reader.h"
 #include "types.h"
 
 #include <stdio.h>
-
-#define SIZEOF(type)    \
-    printf("sizeof %s = %lu\n", #type, sizeof(type))
 
 int main(int argc, char* argv[])
 {
@@ -14,6 +12,8 @@ int main(int argc, char* argv[])
 
     char* input;
     while ((input = getInput("bas> ")) != NULL) {
+        EXCEPTION_SCOPE;
+
         Pointer list = readLine(input);
         print(list);
     }
