@@ -11,6 +11,7 @@
     X(boolean)      \
     X(builtin)      \
     X(integer)      \
+    X(lambda)       \
     X(pair)         \
     X(string)       \
     X(symbol)
@@ -38,6 +39,11 @@ extern Pointer      builtin_make(int index);
 
 extern Pointer      integer_make(int value);
 extern int          integer_get(Pointer ptr);
+
+extern Pointer      lambda_apply(Pointer ptr, Pointer args, Pointer env);
+extern Pointer      lambda_make(Pointer params, Pointer body, Pointer env);
+extern Pointer      lambda_getBody(Pointer ptr);
+extern Pointer      lambda_getParams(Pointer ptr);
 
 extern Pointer      nil_make();
 

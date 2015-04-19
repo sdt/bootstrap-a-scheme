@@ -130,6 +130,7 @@ static void tokeniser_init(Tokeniser* t, char* input)
     t->token  = input;
     tokeniser_advance(t);
 }
+
 static int readInteger(const char* t, int* value)
 {
     int sign = 1;

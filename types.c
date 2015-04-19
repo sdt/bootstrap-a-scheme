@@ -25,6 +25,11 @@ typedef struct {
 
 typedef struct {
     Value_base base;
+    Pointer params, body, env;
+} Value_lambda;
+
+typedef struct {
+    Value_base base;
     Pointer value[2];
 } Value_pair;
 
@@ -46,7 +51,7 @@ static const char* typeName[] = {
     #undef X
 };
 
-static Pointer nil = { Type_nil, 0 };
+static Pointer nil     = { Type_nil, 0 };
 static Pointer symbols = { Type_nil, 0 };
 static Pointer rootEnv = { Type_nil, 0 };
 
@@ -155,6 +160,30 @@ int integer_get(Pointer ptr)
     return raw->value;
 }
 
+Pointer lambda_make(Pointer params, Pointer body, Pointer env)
+{
+    Value_lambda* raw = ALLOC(Value_lambda);
+
+    // Use pointer_follow here in case we've got a broken heart.
+    raw->params = pointer_follow(params);
+    raw->body   = pointer_follow(body);
+    raw->env    = pointer_follow(env);
+
+    return makePointer(Type_lambda, (byte*) raw);
+}
+
+Pointer lambda_getBody(Pointer ptr)
+{
+    Value_lambda* raw = DEREF(ptr, lambda);
+    return raw->body;
+}
+
+Pointer lambda_getParams(Pointer ptr)
+{
+    Value_lambda* raw = DEREF(ptr, lambda);
+    return raw->params;
+}
+
 Pointer nil_make()
 {
     return nil;
@@ -239,28 +268,40 @@ Pointer copy(Pointer ptr)
         // broken hearts (because they are all broken).
         switch (ptr.type) {
             case Type_integer: {
-                Value_integer* raw = DEREF_RAW(ptr, integer);
-                base->relocated = integer_make(raw->value);
+                Value_integer* old = DEREF_RAW(ptr, integer);
+                base->relocated = integer_make(old->value);
+                break;
+            }
+            case Type_lambda: {
+                Value_lambda* old = DEREF_RAW(ptr, lambda);
+                Value_lambda* new = ALLOC(Value_lambda);
+                base->relocated = makePointer(Type_lambda, (byte*) new);
+
+                new->params = copy(old->params);
+                new->body   = copy(old->body);
+                new->env    = copy(old->env);
                 break;
             }
             case Type_pair: {
-                base->relocated = pair_make(nil, nil);
-                Value_pair* raw = DEREF_RAW(ptr, pair);
+                Value_pair* old = DEREF_RAW(ptr, pair);
+                Value_pair* new = ALLOC(Value_pair);
+                base->relocated = makePointer(Type_pair, (byte*) new);
+
                 for (int i = 0; i < 2; i++) {
-                    pair_set(base->relocated, i, copy(raw->value[i]));
+                    new->value[i] = copy(old->value[i]);
                 }
                 break;
             }
             case Type_string: {
-                Value_string* raw = DEREF_RAW(ptr, string);
-                base->relocated = string_make(raw->value);
+                Value_string* old = DEREF_RAW(ptr, string);
+                base->relocated = string_make(old->value);
                 break;
             }
             case Type_symbol: {
-                Value_symbol* raw = DEREF_RAW(ptr, symbol);
+                Value_symbol* old = DEREF_RAW(ptr, symbol);
 
                 // Create the symbol as if it were a string.
-                base->relocated = string_make(raw->value);
+                base->relocated = string_make(old->value);
                 base->relocated.type = Type_symbol;
                 break;
             }
@@ -328,6 +369,14 @@ void value_print(Pointer ptr)
 
         case Type_integer: {
             printf("%d", integer_get(ptr));
+            break;
+        }
+
+        case Type_lambda: {
+            printf("lambda:");
+            value_print(lambda_getParams(ptr));
+            printf("->");
+            value_print(lambda_getBody(ptr));
             break;
         }
 
