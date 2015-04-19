@@ -53,6 +53,7 @@ extern Pointer      symbol_make(const char* value);
 extern const char*  symbol_get(Pointer ptr);
 
 extern Pointer      type_check(Pointer ptr, Type expected);
+extern int          type_isObject(Type type);
 extern const char*  type_name(int type);
 extern void         print(Pointer ptr);
 

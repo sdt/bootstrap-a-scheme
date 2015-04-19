@@ -74,6 +74,12 @@ Pointer type_check(Pointer ptr, Type expected)
     return ptr;
 }
 
+int type_isObject(Type type) {
+    return type != Type_nil
+        && type != Type_boolean
+        && type != Type_builtin;
+}
+
 static Pointer makePointer(Type type, byte* raw)
 {
     Pointer ptr = { type, allocator_getOffset(raw) };
@@ -115,9 +121,7 @@ static Value_base* getValue(Pointer ptr, Type type)
 
 static Pointer followPointer(Pointer ptr)
 {
-    if (ptr.type == Type_nil ||
-        ptr.type == Type_boolean ||
-        ptr.type == Type_builtin) {
+    if (!type_isObject(ptr.type)) {
         return ptr;
     }
 
@@ -234,7 +238,7 @@ Pointer symbol_make(const char* s)
 
 Pointer copy(Pointer ptr)
 {
-    if (ptr.type == Type_nil) {
+    if (!type_isObject(ptr.type)) {
         return ptr;
     }
 
