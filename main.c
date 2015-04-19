@@ -34,12 +34,15 @@ Pointer eval(Pointer ast, Pointer env)
     Pointer op, args;
     const char* sym;
 
+    ast = pointer_follow(ast);
+    env = pointer_follow(env);
+
     switch (ast.type) {
     default:
         return ast;
 
     case Type_symbol:
-        return env_get(env, pointer_follow(ast));
+        return env_get(env, ast);
 
     case Type_pair:
         op = pair_get(ast, 0);
@@ -52,12 +55,12 @@ Pointer eval(Pointer ast, Pointer env)
         }
 
         // If we get here, no special forms applied.
-        ast  = eval_list(ast, env = pointer_follow(env));
+        ast  = eval_list(ast, env);
         op   = pair_get(ast, 0);
         args = pair_get(ast, 1);
 
         if (op.type == Type_builtin) {
-            return builtin_apply(op, args, pointer_follow(env));
+            return builtin_apply(op, args, env);
         }
         throw("%s is not applicable", type_name(op.type));
 
@@ -71,7 +74,13 @@ static Pointer eval_list(Pointer list, Pointer env)
         return list;
     }
 
+    list = pointer_follow(list);
+    env  = pointer_follow(env);
+
     Pointer car = eval(pair_get(list, 0), env = pointer_follow(env));
-    return pair_make(car,
+    list = pointer_follow(list);
+    env  = pointer_follow(env);
+
+    return pair_make(pointer_follow(car),
                      eval_list(pair_get(list, 1), pointer_follow(env)));
 }
