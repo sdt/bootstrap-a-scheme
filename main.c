@@ -51,7 +51,19 @@ Pointer eval(Pointer ast, Pointer env)
             args = pair_get(ast, 1);
             sym = symbol_get(op);
 
-            // special forms
+            if (strcmp(sym, "define") == 0) {
+                Pointer symbol = pair_get(args, 0); args = pair_get(args, 1);
+                Pointer value  = pair_get(args, 0); args = pair_get(args, 1);
+                value = eval(value, env);
+                env_set(pointer_follow(env), symbol, eval(value, env));
+                return pointer_follow(value);
+            }
+
+            if (strcmp(sym, "lambda") == 0) {
+                Pointer params = pair_get(args, 0); args = pair_get(args, 1);
+                Pointer body   = pair_get(args, 0); args = pair_get(args, 1);
+                return lambda_make(params, body, env);
+            }
         }
 
         // If we get here, no special forms applied.
