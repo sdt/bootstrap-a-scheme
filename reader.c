@@ -140,6 +140,9 @@ static int readInteger(const char* t, int* value)
         default: break;
     }
 
+    if (*t == 0)
+        return 0;
+
     *value = 0;
     for ( ; *t != 0; t++) {
         if (isdigit(*t)) {
@@ -149,7 +152,8 @@ static int readInteger(const char* t, int* value)
             return 0;
         }
     }
-    return *value * sign;
+    *value *= sign;
+    return 1;
 }
 
 static Pointer readForm(Tokeniser* t);
