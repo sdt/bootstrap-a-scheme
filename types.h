@@ -8,9 +8,10 @@
  */
 #define TYPES_XLIST \
     X(nil)          \
+    X(boolean)      \
+    X(builtin)      \
     X(integer)      \
     X(pair)         \
-    X(boolean)      \
     X(string)       \
     X(symbol)
 
@@ -29,6 +30,12 @@ typedef struct _Pointer {
     unsigned offset : 29;
 } Pointer;
 
+extern void         types_init();
+extern Pointer      getRootEnv();
+
+extern Pointer      builtin_apply(Pointer ptr, Pointer args, Pointer env);
+extern Pointer      builtin_make(int index);
+
 extern Pointer      integer_make(int value);
 extern int          integer_get(Pointer ptr);
 
@@ -36,14 +43,17 @@ extern Pointer      nil_make();
 
 extern Pointer      pair_make(Pointer car, Pointer cdr);
 extern Pointer      pair_get(Pointer ptr, int index);
+extern void         pair_set(Pointer ptr, int index, Pointer val);
 
 extern Pointer      string_make(const char* value);
 extern Pointer      string_alloc(int length);
 extern const char*  string_get(Pointer ptr);
 
 extern Pointer      symbol_make(const char* value);
-extern const char*  string_get(Pointer ptr);
+extern const char*  symbol_get(Pointer ptr);
 
+extern Pointer      type_check(Pointer ptr, Type expected);
+extern const char*  type_name(int type);
 extern void         print(Pointer ptr);
 
 #endif // INCLUDE_TYPES_H

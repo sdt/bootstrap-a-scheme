@@ -1,7 +1,9 @@
 #include "types.h"
 
 #include "allocator.h"
+#include "core.h"
 #include "debug.h"
+#include "environment.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -48,14 +50,28 @@ static Pointer nil = { Type_nil, 0 };
 static Pointer symbols = { Type_nil, 0 };
 static Pointer rootEnv = { Type_nil, 0 };
 
+void types_init()
+{
+    rootEnv = env_make(nil);
+}
+
+Pointer getRootEnv() { return rootEnv; }
+
 static void collectGarbage();
 
-static const char* getTypeName(int type)
+const char* type_name(int type)
 {
     if ((type >= 0) && (type < Type_COUNT)) {
         return typeName[type];
     }
     return "(invalid type)";
+}
+
+Pointer type_check(Pointer ptr, Type expected)
+{
+    ASSERT(ptr.type == expected, "Expected %s, got %s",
+           type_name(expected), type_name(ptr.type));
+    return ptr;
 }
 
 static Pointer makePointer(Type type, byte* raw)
@@ -78,9 +94,7 @@ static Value_base* allocateValue(int size)
 
 static Value_base* getValueRaw(Pointer ptr, Type type)
 {
-    ASSERT(ptr.type == type, "Expected %s, got %s",
-           getTypeName(type), getTypeName(ptr.type));
-
+    type_check(ptr, type);
     return (Value_base*) allocator_getPointer(ptr.offset);
 }
 
@@ -94,14 +108,16 @@ static Value_base* getValue(Pointer ptr, Type type)
         // I don't quite see what stops this from happening, but if it does,
         // it's not a good sign.
         ASSERT(base->relocated.type == Type_nil,
-            "%s value has moved heaps twice", getTypeName(type));
+            "%s value has moved heaps twice", type_name(type));
     }
     return base;
 }
 
 static Pointer followPointer(Pointer ptr)
 {
-    if (ptr.type == Type_nil) {
+    if (ptr.type == Type_nil ||
+        ptr.type == Type_boolean ||
+        ptr.type == Type_builtin) {
         return ptr;
     }
 
@@ -113,9 +129,21 @@ static Pointer followPointer(Pointer ptr)
         // I don't quite see what stops this from happening, but if it does,
         // it's not a good sign.
         ASSERT(base->relocated.type == Type_nil,
-            "%s value has moved heaps twice", getTypeName(ptr.type));
+            "%s value has moved heaps twice", type_name(ptr.type));
     }
     return makePointer(ptr.type, (byte*) base);
+}
+
+Pointer builtin_make(int offset)
+{
+    Pointer ptr = { Type_builtin, offset };
+    return ptr;
+}
+
+Pointer builtin_apply(Pointer ptr, Pointer args, Pointer env)
+{
+    type_check(ptr, Type_builtin);
+    return core_apply(ptr.offset, args, env);
 }
 
 Pointer integer_make(int value)
@@ -242,7 +270,7 @@ Pointer copy(Pointer ptr)
                 break;
             }
             default: {
-                ASSERT(0, "Unexpected %s value", getTypeName(ptr.type));
+                ASSERT(0, "Unexpected %s value", type_name(ptr.type));
                 break;
             }
         }
@@ -298,6 +326,11 @@ void value_print(Pointer ptr)
             break;
         }
 
+        case Type_builtin: {
+            printf("builtin:%d", ptr.offset);
+            break;
+        }
+
         case Type_integer: {
             printf("%d", integer_get(ptr));
             break;
@@ -321,7 +354,7 @@ void value_print(Pointer ptr)
         }
 
         default: {
-            ASSERT(0, "Unexpected %s value", getTypeName(ptr.type));
+            ASSERT(0, "Unexpected %s value", type_name(ptr.type));
             break;
         }
     }
