@@ -5,6 +5,7 @@
 #include "input.h"
 #include "reader.h"
 #include "types.h"
+#include "valuestack.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +15,9 @@ Pointer eval(Pointer ast, Pointer env);
 
 int main(int argc, char* argv[])
 {
-    allocator_init(1 * 1024);
+    int heapSize = 1 * 1024;
+    allocator_init(heapSize);
+    valuestack_init(heapSize / 16);
     types_init();
     core_init();
 

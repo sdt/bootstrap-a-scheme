@@ -4,6 +4,7 @@
 #include "core.h"
 #include "debug.h"
 #include "environment.h"
+#include "valuestack.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -51,18 +52,20 @@ static const char* typeName[] = {
     #undef X
 };
 
-static Pointer nil     = { Type_nil, 0 };
-static Pointer false_value = { Type_boolean, 0 };
-static Pointer true_value  = { Type_boolean, 1 };
-static Pointer symbols = { Type_nil, 0 };
-static Pointer rootEnv = { Type_nil, 0 };
+static Pointer nil          = { Type_nil, 0 };
+static Pointer false_value  = { Type_boolean, 0 };
+static Pointer true_value   = { Type_boolean, 1 };
+
+static StackIndex symbolsIndex = -1;
+static StackIndex rootEnvIndex = -1;
 
 void types_init()
 {
-    rootEnv = env_make(nil);
+    rootEnvIndex = valuestack_push(env_make(nil));
+    symbolsIndex = valuestack_push(nil);
 }
 
-Pointer getRootEnv() { return rootEnv; }
+Pointer getRootEnv() { return valuestack_get(rootEnvIndex); }
 
 static void collectGarbage();
 
@@ -287,7 +290,9 @@ const char* symbol_get(Pointer ptr)
 Pointer symbol_make(const char* s)
 {
     // Check if this symbol already exists.
-    for (Pointer ptr = symbols; ptr.type != Type_nil; ptr = pair_get(ptr, 1)) {
+    for (Pointer ptr = valuestack_get(symbolsIndex);
+         ptr.type != Type_nil;
+         ptr = pair_get(ptr, 1)) {
         Pointer sym = pair_get(ptr, 0);
         if (strcmp(s, symbol_get(sym)) == 0) {
             return sym;
@@ -297,11 +302,11 @@ Pointer symbol_make(const char* s)
     // Create a new symbol, and add it to the symbols list.
     Pointer ptr = string_make(s);
     ptr.type = Type_symbol;
-    symbols = pair_make(ptr, symbols);
+    valuestack_set(symbolsIndex, pair_make(ptr, valuestack_get(symbolsIndex)));
     return ptr;
 }
 
-Pointer copy(Pointer ptr)
+Pointer pointer_copy(Pointer ptr)
 {
     if (!type_isObject(ptr.type)) {
         return ptr;
@@ -322,9 +327,9 @@ Pointer copy(Pointer ptr)
                 Value_lambda* new = ALLOC(Value_lambda);
                 base->relocated = makePointer(Type_lambda, (byte*) new);
 
-                new->params = copy(old->params);
-                new->body   = copy(old->body);
-                new->env    = copy(old->env);
+                new->params = pointer_copy(old->params);
+                new->body   = pointer_copy(old->body);
+                new->env    = pointer_copy(old->env);
                 break;
             }
             case Type_pair: {
@@ -333,7 +338,7 @@ Pointer copy(Pointer ptr)
                 base->relocated = makePointer(Type_pair, (byte*) new);
 
                 for (int i = 0; i < 2; i++) {
-                    new->value[i] = copy(old->value[i]);
+                    new->value[i] = pointer_copy(old->value[i]);
                 }
                 break;
             }
@@ -364,8 +369,7 @@ static void collectGarbage()
     int before = allocator_bytesAvailable();
 
     allocator_swapHeaps();
-    symbols = copy(symbols);
-    rootEnv = copy(rootEnv);
+    valuestack_swapHeaps();
 
     int after = allocator_bytesAvailable();
     fprintf(stderr, "Garbage collected %d -> %d: %d bytes freed\n", before, after, after - before);
