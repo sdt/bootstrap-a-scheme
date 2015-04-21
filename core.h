@@ -11,11 +11,12 @@
     X("empty?",     isEmpty)        \
     X("*gc*",       gc)             \
     X("+",          add)            \
+    X("<",          lt)             \
+    X("*",          mul)            \
     X("=",          equals)
 
 /*
     X("-", sub) \
-    X("*", mul) \
     X("/", div) \
     X("car", car) \
     X("cdr", cdr) \

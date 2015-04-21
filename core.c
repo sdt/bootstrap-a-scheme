@@ -165,3 +165,29 @@ HANDLER(isEmpty)
     Pointer a = ARGPTR(args);
     return boolean_make(a.type == Type_nil);
 }
+
+HANDLER(lt)
+{
+    CHECK_ARGS_COUNT(2);
+
+    return boolean_make(integer_get(NTH(argsIndex, 0))
+                     <  integer_get(NTH(argsIndex, 1)));
+}
+
+HANDLER(mul)
+{
+    // There's no allocations going on in here, so it's safe to walk the
+    // raw pointers.
+    int product = 1;
+    for (Pointer args = GET(argsIndex);
+         args.type != Type_nil; args = pair_get(args, 1)) {
+
+        Pointer intPtr = pair_get(args, 0);
+        CHECK_TYPE(intPtr, integer);
+
+        product *= integer_get(intPtr);
+    }
+
+    return integer_make(product);
+}
+
