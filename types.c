@@ -4,6 +4,7 @@
 #include "core.h"
 #include "debug.h"
 #include "environment.h"
+#include "gc.h"
 #include "symtab.h"
 #include "valuestack.h"
 
@@ -57,12 +58,6 @@ static Pointer nil          = { Type_nil, 0 };
 static Pointer false_value  = { Type_boolean, 0 };
 static Pointer true_value   = { Type_boolean, 1 };
 
-void types_init()
-{
-}
-
-static void collectGarbage();
-
 const char* type_name(int type)
 {
     if ((type >= 0) && (type < Type_COUNT)) {
@@ -105,7 +100,7 @@ static Value_base* allocateValue(int size)
 {
     Value_base* base = (Value_base*) allocator_alloc(size);
     if (base == NULL) {
-        collectGarbage();
+        gc_run();
         base = (Value_base*) allocator_alloc(size);
         ASSERT(base != NULL, "Out of memory");
     }
@@ -351,17 +346,6 @@ Pointer pointer_copy(Pointer ptr)
         }
     }
     return base->relocated;
-}
-
-static void collectGarbage()
-{
-    int before = allocator_bytesAvailable();
-
-    allocator_swapHeaps();
-    valuestack_swapHeaps();
-
-    int after = allocator_bytesAvailable();
-    fprintf(stderr, "Garbage collected %d -> %d: %d bytes freed\n", before, after, after - before);
 }
 
 void value_print(Pointer ptr);
