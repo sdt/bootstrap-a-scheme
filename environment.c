@@ -37,10 +37,31 @@ Pointer env_make(StackIndex outerIndex)
     return ret;
 }
 
+static Pointer env_find(Pointer env, Pointer symbol)
+{
+    for (Pointer symbols = pair_get(env, 0);
+         symbols.type != Type_nil;
+         symbols = pair_get(symbols, 1)) {
+
+        Pointer entry = pair_get(symbols, 0);
+        if (symbol.offset == pair_get(entry, 0).offset) {
+            return entry;
+        }
+    }
+    return nil_make();
+}
+
 void env_set(StackIndex envIndex, StackIndex symIndex, StackIndex valIndex)
 {
-    // For now, just push this onto the front. Don't worry if we've already
-    // got this symbol.
+    // See if this symbol is already defined.
+    Pointer entry = env_find(GET(envIndex), GET(symIndex));
+    if (entry.type != Type_nil) {
+        // Just update the existing symbol.
+        pair_set(entry, 1, GET(valIndex));
+        return;
+    }
+
+    // Create a new entry.
     StackIndex newEntryIndex = PUSH(pair_make(symIndex, valIndex));
     StackIndex oldMapIndex   = PUSH(PAIR_GET(envIndex, 0));
     StackIndex newMapIndex   = PUSH(pair_make(newEntryIndex, oldMapIndex));
@@ -53,14 +74,9 @@ void env_set(StackIndex envIndex, StackIndex symIndex, StackIndex valIndex)
 Pointer env_get(Pointer env, Pointer symbol)
 {
     for ( ; env.type != Type_nil; env = pair_get(env, 1)) {
-        for (Pointer symbols = pair_get(env, 0);
-             symbols.type != Type_nil;
-             symbols = pair_get(symbols, 1)) {
-
-            Pointer entry = pair_get(symbols, 0);
-            if (symbol.offset == pair_get(entry, 0).offset) {
-                return pair_get(entry, 1);
-            }
+        Pointer entry = env_find(env, symbol);
+        if (entry.type != Type_nil) {
+            return pair_get(entry, 1);
         }
     }
     THROW("\"%s\" not found", symbol_get(symbol));
