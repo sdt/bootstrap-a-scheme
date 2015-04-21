@@ -15,4 +15,13 @@ extern Pointer      valuestack_set(StackIndex index, Pointer ptr);
 extern void         valuestack_swapHeaps();
 extern StackIndex   valuestack_top();
 
+// These probably should go elsewhere.
+#define GET(stackIndex)                 valuestack_get(stackIndex)
+#define SET(stackIndex, ptr)            valuestack_set(stackIndex, ptr)
+#define PAIR_GET(stackIndex, which)     pair_get(GET(stackIndex), which)
+#define PUSH(ptr)                       valuestack_push(ptr)
+#define POP()                           valuestack_pop()
+#define DROP(n)                         valuestack_drop(n)
+#define NTH(stackIndex, n)              nth(GET(stackIndex), n)
+
 #endif // INCLUDE_VALUESTACK_H

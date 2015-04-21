@@ -52,12 +52,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-#define GET(stackIndex)                 valuestack_get(stackIndex)
-#define SET(stackIndex, ptr)            valuestack_set(stackIndex, ptr)
-#define PAIR_GET(stackIndex, which)     pair_get(GET(stackIndex), which)
-#define PUSH(ptr)                       valuestack_push(ptr)
-#define NTH(stackIndex, n)              nth(GET(stackIndex), n)
-
 static Pointer nth(Pointer ptr, int n)
 {
     for (int i = 0; i < n; i++) {
@@ -103,13 +97,11 @@ static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
                 return eval(retIndex, envIndex);
             }
 
-            /*
             if (strcmp(sym, "lambda") == 0) {
-                Pointer params = pair_get(args, 0); args = pair_get(args, 1);
-                Pointer body   = pair_get(args, 0); args = pair_get(args, 1);
-                return lambda_make(params, body, env);
+                StackIndex paramsIndex = PUSH(NTH(argsIndex, 0));
+                StackIndex bodyIndex   = PUSH(NTH(argsIndex, 1));
+                return lambda_make(paramsIndex, bodyIndex, envIndex);
             }
-            */
         }
 
         // If we get here, no special forms applied.
@@ -122,10 +114,8 @@ static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
             case Type_builtin:
                 return builtin_apply(GET(opIndex), argsIndex, envIndex);
 
-/*
             case Type_lambda:
                 return lambda_apply(opIndex, argsIndex, envIndex);
-*/
 
             default:
                 THROW("%s is not applicable", type_name(GET(opIndex).type));
@@ -160,7 +150,7 @@ static Pointer eval_list(StackIndex listIndex, StackIndex envIndex)
 
     Pointer ret = pair_make(GET(carIndex), GET(cdrIndex));
 
-    valuestack_drop(2);
+    DROP(2);
 
     return ret;
 }

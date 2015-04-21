@@ -181,35 +181,42 @@ int integer_get(Pointer ptr)
     return raw->value;
 }
 
-Pointer lambda_apply(Pointer ptr, Pointer args, Pointer env)
+Pointer lambda_apply(StackIndex lambdaIndex, StackIndex argsIndex,
+                    StackIndex envIndex)
 {
-    Pointer inner = env_make(env);
-    Pointer params = lambda_getParams(ptr);
+    StackIndex innerIndex  = PUSH(env_make(GET(envIndex)));
+    StackIndex paramsIndex = PUSH(lambda_getParams(GET(lambdaIndex)));
 
-    if (type_isList(params.type)) {
-        while (params.type == Type_pair) {
-            env_set(inner, pair_get(params, 0), pair_get(args, 0));
-            inner = pointer_follow(inner);
-            params = pair_get(params, 1);
-            args   = pair_get(args, 1);
+    if (type_isList(GET(paramsIndex).type)) {
+        while (GET(paramsIndex).type == Type_pair) {
+            env_set(GET(innerIndex),
+                    PAIR_GET(paramsIndex, 0), PAIR_GET(argsIndex, 0));
+            SET(paramsIndex, PAIR_GET(paramsIndex, 1));
+            SET(argsIndex,   PAIR_GET(argsIndex, 1));
         }
     }
     else {
-        env_set(inner, params, args);
-        inner = pointer_follow(inner);
+        env_set(GET(innerIndex), GET(paramsIndex), GET(argsIndex));
     }
-    extern Pointer eval(Pointer, Pointer);
-    return eval(lambda_getBody(ptr), inner);
+
+    StackIndex bodyIndex = PUSH(lambda_getBody(GET(lambdaIndex)));
+
+    extern Pointer eval(StackIndex, StackIndex);
+    Pointer ret = eval(bodyIndex, innerIndex);
+
+    DROP(3);
+
+    return ret;
 }
 
-Pointer lambda_make(Pointer params, Pointer body, Pointer env)
+Pointer lambda_make(StackIndex paramsIndex, StackIndex bodyIndex,
+                    StackIndex envIndex)
 {
     Value_lambda* raw = ALLOC(Value_lambda);
 
-    // Use pointer_follow here in case we've got a broken heart.
-    raw->params = pointer_follow(params);
-    raw->body   = pointer_follow(body);
-    raw->env    = pointer_follow(env);
+    raw->params = GET(paramsIndex);
+    raw->body   = GET(bodyIndex);
+    raw->env    = GET(envIndex);
 
     return makePointer(Type_lambda, (byte*) raw);
 }

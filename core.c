@@ -28,16 +28,16 @@ static Handler handlerTable[] = {
 
 void core_init()
 {
-    StackIndex symIndex = valuestack_push(nil_make());
+    StackIndex symIndex = PUSH(nil_make());
 
     for (int i = 0; i < Core_COUNT; i++) {
         Handler* h = &handlerTable[i];
-        valuestack_set(symIndex, symbol_make(h->symbol));
+        SET(symIndex, symbol_make(h->symbol));
         Pointer value = builtin_make(i);
-        env_set(valuestack_get(env_root()), valuestack_get(symIndex), value);
+        env_set(GET(env_root()), GET(symIndex), value);
     }
 
-    valuestack_drop(1);
+    DROP(1);
 }
 
 Pointer core_apply(CoreHandlerId id, StackIndex argsIndex, StackIndex envIndex)
@@ -58,7 +58,7 @@ static int countArgs(Pointer args)
 #define PLURAL(n)   (&"s"[(n)==1])
 
 #define CHECK_ARGS_COUNT(expected) \
-    int argsCount = countArgs(valuestack_get(argsIndex)); \
+    int argsCount = countArgs(GET(argsIndex)); \
     if (argsCount != (expected)) { \
         THROW("%s: %d arg%s expected, %d provided", \
             symbol, expected, PLURAL(expected), argsCount); \
@@ -79,7 +79,7 @@ HANDLER(add)
     // There's no allocations going on in here, so it's safe to walk the
     // raw pointers.
     int sum = 0;
-    for (Pointer args = valuestack_get(argsIndex);
+    for (Pointer args = GET(argsIndex);
          args.type != Type_nil; args = pair_get(args, 1)) {
 
         Pointer intPtr = pair_get(args, 0);
@@ -96,7 +96,7 @@ HANDLER(cons)
     // There's no allocations going on in here, so it's safe to walk the
     // raw pointers.
     CHECK_ARGS_COUNT(2);
-    Pointer args = valuestack_get(argsIndex);
+    Pointer args = GET(argsIndex);
 
     Pointer a = ARGPTR(args);
     Pointer b = ARGPTR(args);
@@ -109,7 +109,7 @@ HANDLER(car)
     // There's no allocations going on in here, so it's safe to walk the
     // raw pointers.
     CHECK_ARGS_COUNT(1);
-    Pointer args = valuestack_get(argsIndex);
+    Pointer args = GET(argsIndex);
 
     Pointer pair = ARG(args, pair);
 
@@ -121,7 +121,7 @@ HANDLER(cdr)
     // There's no allocations going on in here, so it's safe to walk the
     // raw pointers.
     CHECK_ARGS_COUNT(1);
-    Pointer args = valuestack_get(argsIndex);
+    Pointer args = GET(argsIndex);
 
     Pointer pair = ARG(args, pair);
 
@@ -133,7 +133,7 @@ HANDLER(isEmpty)
     // There's no allocations going on in here, so it's safe to walk the
     // raw pointers.
     CHECK_ARGS_COUNT(1);
-    Pointer args = valuestack_get(argsIndex);
+    Pointer args = GET(argsIndex);
 
     Pointer a = ARGPTR(args);
     return boolean_make(a.type == Type_nil);

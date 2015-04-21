@@ -41,8 +41,10 @@ extern Pointer      builtin_make(int index);
 extern Pointer      integer_make(int value);
 extern int          integer_get(Pointer ptr);
 
-extern Pointer      lambda_apply(Pointer ptr, Pointer args, Pointer env);
-extern Pointer      lambda_make(Pointer params, Pointer body, Pointer env);
+extern Pointer      lambda_apply(StackIndex lambdaIndex, StackIndex argsIndex,
+                                 StackIndex envIndex);
+extern Pointer      lambda_make(StackIndex params, StackIndex body,
+                                StackIndex env);
 extern Pointer      lambda_getBody(Pointer ptr);
 extern Pointer      lambda_getParams(Pointer ptr);
 
