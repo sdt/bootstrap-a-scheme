@@ -13,5 +13,6 @@ void gc_run()
     valuestack_swapHeaps();
 
     int after = allocator_bytesAvailable();
-    fprintf(stderr, "Garbage collected %d -> %d: %d bytes freed\n", before, after, after - before);
+    fprintf(stderr, "Garbage collected: %d bytes freed.\n", after - before);
+    fprintf(stderr, "Heap: %d used, %d free.\n", allocator_bytesUsed(), after);
 }

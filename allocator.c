@@ -69,6 +69,11 @@ int allocator_bytesAvailable()
     return allocator.heapSize - allocator.bytesUsed;
 }
 
+int allocator_bytesUsed()
+{
+    return allocator.bytesUsed;
+}
+
 void allocator_dumpInfo(FILE* fh)
 {
     fprintf(fh, "%d-byte heaps @ (0x%p/0x%p) %d active, %d used\n",

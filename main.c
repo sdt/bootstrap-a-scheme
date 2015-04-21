@@ -3,6 +3,7 @@
 #include "core.h"
 #include "environment.h"
 #include "exception.h"
+#include "gc.h"
 #include "input.h"
 #include "reader.h"
 #include "symtab.h"
@@ -25,6 +26,7 @@ int main(int argc, char* argv[])
     symtab_init();
     core_init();
     input_init();
+    gc_run();
 
     StackIndex prevTop = valuestack_top();
 

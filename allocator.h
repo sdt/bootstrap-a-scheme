@@ -8,6 +8,7 @@ extern void         allocator_deinit();
 extern byte*        allocator_alloc(int size);
 extern void         allocator_swapHeaps();
 extern int          allocator_bytesAvailable();
+extern int          allocator_bytesUsed();
 extern unsigned     allocator_getOffset(byte* pointer);
 extern byte*        allocator_getPointer(unsigned offset);
 
