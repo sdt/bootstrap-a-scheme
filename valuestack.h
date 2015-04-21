@@ -22,6 +22,7 @@ extern StackIndex   valuestack_top();
 #define PUSH(ptr)                       valuestack_push(ptr)
 #define POP()                           valuestack_pop()
 #define DROP(n)                         valuestack_drop(n)
-#define NTH(stackIndex, n)              nth(GET(stackIndex), n)
+#define NTH(stackIndex, n)              list_nth(GET(stackIndex), n)
+#define RESERVE()                       valuestack_reserve()
 
 #endif // INCLUDE_VALUESTACK_H

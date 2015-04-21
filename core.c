@@ -29,15 +29,17 @@ static Handler handlerTable[] = {
 void core_init()
 {
     StackIndex symIndex = PUSH(nil_make());
+    StackIndex valIndex = RESERVE();
 
     for (int i = 0; i < Core_COUNT; i++) {
         Handler* h = &handlerTable[i];
         SET(symIndex, symbol_make(h->symbol));
-        Pointer value = builtin_make(i);
-        env_set(GET(env_root()), GET(symIndex), value);
+        SET(valIndex, builtin_make(i));
+
+        env_set(env_root(), symIndex, valIndex);
     }
 
-    DROP(1);
+    DROP(2);
 }
 
 Pointer core_apply(CoreHandlerId id, StackIndex argsIndex, StackIndex envIndex)
@@ -96,12 +98,15 @@ HANDLER(cons)
     // There's no allocations going on in here, so it's safe to walk the
     // raw pointers.
     CHECK_ARGS_COUNT(2);
-    Pointer args = GET(argsIndex);
 
-    Pointer a = ARGPTR(args);
-    Pointer b = ARGPTR(args);
+    StackIndex carIndex = PUSH(NTH(argsIndex, 0));
+    StackIndex cdrIndex = PUSH(NTH(argsIndex, 1));
 
-    return pair_make(a, b);
+    Pointer ret = pair_make(carIndex, cdrIndex);
+
+    DROP(2);
+
+    return ret;
 }
 
 HANDLER(car)

@@ -13,13 +13,13 @@ static SymbolTable symtab;
 
 void symtab_init()
 {
-    symtab.index = valuestack_push(nil_make());
+    symtab.index = PUSH(nil_make());
 }
 
 Pointer symtab_find(const char* s)
 {
     // No allocations going on in here, so safe to use pointers.
-    for (Pointer ptr = valuestack_get(symtab.index);
+    for (Pointer ptr = GET(symtab.index);
          ptr.type != Type_nil;
          ptr = pair_get(ptr, 1)) {
 
@@ -31,12 +31,12 @@ Pointer symtab_find(const char* s)
     return nil_make();
 }
 
-void symtab_add(StackIndex index)
+void symtab_add(StackIndex symIndex)
 {
-    Pointer symbol = valuestack_get(index);
+    Pointer symbol = GET(symIndex);
     symbol.type = Type_symbol; // it starts as a string.
-    valuestack_set(index, symbol);
 
-    Pointer pair = pair_make(symbol, valuestack_get(symtab.index));
-    valuestack_set(symtab.index, pair);
+    SET(symIndex, symbol);
+
+    SET(symtab.index, pair_make(symIndex, symtab.index));
 }

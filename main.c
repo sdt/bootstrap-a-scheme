@@ -52,14 +52,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-static Pointer nth(Pointer ptr, int n)
-{
-    for (int i = 0; i < n; i++) {
-        ptr = pair_get(ptr, 1);
-    }
-    return pair_get(ptr, 0);
-}
-
 static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
 {
     StackIndex opIndex   = valuestack_reserve();
@@ -85,7 +77,7 @@ static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
                 StackIndex symIndex = PUSH(NTH(argsIndex, 0));
                 StackIndex valIndex = PUSH(NTH(argsIndex, 1));
                 SET(valIndex, eval(valIndex, envIndex));
-                env_set(GET(envIndex), GET(symIndex), GET(valIndex));
+                env_set(envIndex, symIndex, valIndex);
                 return GET(valIndex);
             }
 
@@ -148,7 +140,7 @@ static Pointer eval_list(StackIndex listIndex, StackIndex envIndex)
     SET(carIndex, eval(carIndex, envIndex));
     SET(cdrIndex, eval_list(cdrIndex, envIndex));
 
-    Pointer ret = pair_make(GET(carIndex), GET(cdrIndex));
+    Pointer ret = pair_make(carIndex, cdrIndex);
 
     DROP(2);
 

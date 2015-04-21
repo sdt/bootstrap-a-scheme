@@ -48,9 +48,11 @@ extern Pointer      lambda_make(StackIndex params, StackIndex body,
 extern Pointer      lambda_getBody(Pointer ptr);
 extern Pointer      lambda_getParams(Pointer ptr);
 
+extern Pointer      list_nth(Pointer ptr, int n);
+
 extern Pointer      nil_make();
 
-extern Pointer      pair_make(Pointer car, Pointer cdr);
+extern Pointer      pair_make(StackIndex carIndex, StackIndex cdrIndex);
 extern Pointer      pair_get(Pointer ptr, int index);
 extern void         pair_set(Pointer ptr, int index, Pointer val);
 

@@ -6,8 +6,9 @@
 
 extern void         env_init();
 extern StackIndex   env_root();
-extern Pointer      env_make(Pointer outer);
-extern void         env_set(Pointer env, Pointer symbol, Pointer value);
+extern Pointer      env_make(StackIndex outerIndex);
+extern void         env_set(StackIndex envIndex,
+                            StackIndex symIndex, StackIndex valIndex);
 extern Pointer      env_get(Pointer env, Pointer symbol);
 
 #endif // INCLUDE_ENVIRONMENT_H

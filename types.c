@@ -184,19 +184,23 @@ int integer_get(Pointer ptr)
 Pointer lambda_apply(StackIndex lambdaIndex, StackIndex argsIndex,
                     StackIndex envIndex)
 {
-    StackIndex innerIndex  = PUSH(env_make(GET(envIndex)));
+    StackIndex innerIndex  = PUSH(env_make(envIndex));
     StackIndex paramsIndex = PUSH(lambda_getParams(GET(lambdaIndex)));
 
     if (type_isList(GET(paramsIndex).type)) {
         while (GET(paramsIndex).type == Type_pair) {
-            env_set(GET(innerIndex),
-                    PAIR_GET(paramsIndex, 0), PAIR_GET(argsIndex, 0));
+            StackIndex keyIndex = PUSH(PAIR_GET(paramsIndex, 0));
+            StackIndex valIndex = PUSH(PAIR_GET(argsIndex, 0));
+
+            env_set(innerIndex, keyIndex, valIndex);
+
             SET(paramsIndex, PAIR_GET(paramsIndex, 1));
             SET(argsIndex,   PAIR_GET(argsIndex, 1));
+            DROP(2);
         }
     }
     else {
-        env_set(GET(innerIndex), GET(paramsIndex), GET(argsIndex));
+        env_set(innerIndex, paramsIndex, argsIndex);
     }
 
     StackIndex bodyIndex = PUSH(lambda_getBody(GET(lambdaIndex)));
@@ -233,18 +237,25 @@ Pointer lambda_getParams(Pointer ptr)
     return raw->params;
 }
 
+Pointer list_nth(Pointer ptr, int n)
+{
+    for (int i = 0; i < n; i++) {
+        ptr = pair_get(ptr, 1);
+    }
+    return pair_get(ptr, 0);
+}
+
 Pointer nil_make()
 {
     return nil;
 }
 
-Pointer pair_make(Pointer car, Pointer cdr)
+Pointer pair_make(StackIndex carIndex, StackIndex cdrIndex)
 {
     Value_pair* raw = ALLOC(Value_pair);
 
-    // Use pointer_follow here in case we've got a broken heart.
-    raw->value[0] = pointer_follow(car);
-    raw->value[1] = pointer_follow(cdr);
+    raw->value[0] = GET(carIndex);
+    raw->value[1] = GET(cdrIndex);
 
     return makePointer(Type_pair, (byte*) raw);
 }
@@ -295,9 +306,9 @@ Pointer symbol_make(const char* s)
 
     if (ptr.type == Type_nil) {
         // Create a new symbol, and add it to the symbol table.
-        StackIndex symIndex = valuestack_push(string_make(s));
+        StackIndex symIndex = PUSH(string_make(s));
         symtab_add(symIndex);
-        ptr = valuestack_pop();
+        ptr = POP();
     }
     return ptr;
 }

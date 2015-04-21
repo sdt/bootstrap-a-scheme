@@ -173,7 +173,7 @@ static Pointer readList(Tokeniser* t)
     StackIndex carIndex = PUSH(readForm(t));
     StackIndex cdrIndex = PUSH(readList(t));
 
-    Pointer ret = pair_make(GET(carIndex), GET(cdrIndex));
+    Pointer ret = pair_make(carIndex, cdrIndex);
 
     DROP(2);
 

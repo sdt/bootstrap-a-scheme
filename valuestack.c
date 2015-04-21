@@ -88,3 +88,11 @@ StackIndex valuestack_top()
 {
     return vs.top;
 }
+
+void valuestack_print()
+{
+    for (StackIndex index = 0; index < vs.top; index++) {
+        printf("STACK[%d]:", index);
+        print(vs.slot[index]);
+    }
+}

@@ -5,8 +5,8 @@
 #include "types.h"
 #include "valuestack.h"
 
-// Environment is a list of (symbol => value) pairs
-// (symbols, outer)
+// Environment is a pair of (Map, outerEnv)
+// Map is a list of (symbol, value) pairs
 
 typedef struct {
     StackIndex rootIndex;
@@ -16,7 +16,11 @@ static EnvironmentData data;
 
 void env_init()
 {
-    data.rootIndex = valuestack_push(env_make(nil_make()));
+    data.rootIndex = RESERVE();
+
+    StackIndex mapIndex = PUSH(nil_make()); // TODO: fixed slot for nil
+    SET(data.rootIndex, env_make(mapIndex));
+    DROP(1);
 }
 
 StackIndex env_root()
@@ -24,19 +28,26 @@ StackIndex env_root()
     return data.rootIndex;
 }
 
-Pointer env_make(Pointer outer)
+Pointer env_make(StackIndex outerIndex)
 {
-    return pair_make(nil_make(), outer);
+    StackIndex mapIndex = PUSH(nil_make()); // TODO: fixed slot for nil
+    Pointer ret = pair_make(mapIndex, outerIndex);
+
+    DROP(1);
+    return ret;
 }
 
-void env_set(Pointer env, Pointer symbol, Pointer value)
+void env_set(StackIndex envIndex, StackIndex symIndex, StackIndex valIndex)
 {
     // For now, just push this onto the front. Don't worry if we've already
     // got this symbol.
-    Pointer symbols = pair_get(env, 0);
-    Pointer entry = pair_make(symbol, value);
-    symbols = pair_make(entry, symbols);
-    pair_set(env, 0, symbols);
+    StackIndex newEntryIndex = PUSH(pair_make(symIndex, valIndex));
+    StackIndex oldMapIndex   = PUSH(PAIR_GET(envIndex, 0));
+    StackIndex newMapIndex   = PUSH(pair_make(newEntryIndex, oldMapIndex));
+
+    pair_set(GET(envIndex), 0, GET(newMapIndex));
+
+    DROP(3);
 }
 
 Pointer env_get(Pointer env, Pointer symbol)
