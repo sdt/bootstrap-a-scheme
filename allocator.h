@@ -1,7 +1,7 @@
 #ifndef INCLUDE_ALLOCATOR_H
 #define INCLUDE_ALLOCATOR_H
 
-#include "forward.h"
+typedef unsigned char byte;
 
 extern void         allocator_init(int heapSize);
 extern void         allocator_deinit();

@@ -1,7 +1,7 @@
 #ifndef INCLUDE_TYPES_H
 #define INCLUDE_TYPES_H
 
-#include "forward.h"
+#include "allocator.h"
 
 /* Use an X-macro to define the types. This list will get reused in a number of
  * places. see: http://en.wikipedia.org/wiki/X_Macro
