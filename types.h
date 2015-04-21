@@ -31,9 +31,6 @@ typedef struct _Pointer {
     unsigned offset : 29;
 } Pointer;
 
-extern void         types_init();
-extern Pointer      getRootEnv();
-
 extern Pointer      boolean_make(int value);
 extern int          boolean_get();
 

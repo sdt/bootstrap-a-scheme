@@ -18,17 +18,18 @@ Pointer eval(Pointer ast, Pointer env);
 int main(int argc, char* argv[])
 {
     int heapSize = 1 * 1024;
+
     allocator_init(heapSize);
     valuestack_init(heapSize / 16);
     env_init();
     symtab_init();
-    types_init();
     core_init();
+    input_init();
 
     StackIndex prevTop = valuestack_top();
 
     char* input;
-    while ((input = getInput("bas> ")) != NULL) {
+    while ((input = input_get("bas> ")) != NULL) {
         StackIndex top = valuestack_top();
         ASSERT(top == prevTop, "Value stack out of whack! Was %d, is %d",
             prevTop, top);

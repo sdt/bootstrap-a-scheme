@@ -12,16 +12,17 @@
 
 const char* historyPath = NULL;
 
-char* getInput(const char* prompt)
+void input_init()
 {
-    if (historyPath == NULL) {
-        historyPath = tilde_expand(HISTORY_FILE);
-        if (read_history(historyPath) != 0) {
-            // create the history file if it doesn't seem to exist
-            fclose(fopen(historyPath, "a"));
-        }
+    historyPath = tilde_expand(HISTORY_FILE);
+    if (read_history(historyPath) != 0) {
+        // create the history file if it doesn't seem to exist
+        fclose(fopen(historyPath, "a"));
     }
+}
 
+char* input_get(const char* prompt)
+{
     char *line = readline(prompt);
     if (line != NULL) {
         add_history(line); // Add input to in-memory history
