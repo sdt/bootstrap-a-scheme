@@ -4,6 +4,7 @@
 #include "exception.h"
 #include "input.h"
 #include "reader.h"
+#include "symtab.h"
 #include "types.h"
 #include "valuestack.h"
 
@@ -18,6 +19,7 @@ int main(int argc, char* argv[])
     int heapSize = 1 * 1024;
     allocator_init(heapSize);
     valuestack_init(heapSize / 16);
+    symtab_init();
     types_init();
     core_init();
 

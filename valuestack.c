@@ -28,6 +28,14 @@ StackIndex valuestack_push(Pointer ptr)
     return index;
 }
 
+Pointer valuestack_pop()
+{
+    ASSERT(vs.top >= 0, "Value stack underflow");
+
+    int index = --vs.top;
+    return vs.slot[index];
+}
+
 StackIndex valuestack_popTo(StackIndex index)
 {
     // Can't pop upwards. New top must be <= vs.top.
@@ -59,4 +67,9 @@ void valuestack_swapHeaps()
     for (StackIndex index = 0; index < vs.top; index++) {
         vs.slot[index] = pointer_copy(vs.slot[index]);
     }
+}
+
+StackIndex valuestack_top()
+{
+    return vs.top;
 }

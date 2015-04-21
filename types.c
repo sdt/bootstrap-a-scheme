@@ -4,6 +4,7 @@
 #include "core.h"
 #include "debug.h"
 #include "environment.h"
+#include "symtab.h"
 #include "valuestack.h"
 
 #include <assert.h>
@@ -56,13 +57,11 @@ static Pointer nil          = { Type_nil, 0 };
 static Pointer false_value  = { Type_boolean, 0 };
 static Pointer true_value   = { Type_boolean, 1 };
 
-static StackIndex symbolsIndex = -1;
 static StackIndex rootEnvIndex = -1;
 
 void types_init()
 {
     rootEnvIndex = valuestack_push(env_make(nil));
-    symbolsIndex = valuestack_push(nil);
 }
 
 Pointer getRootEnv() { return valuestack_get(rootEnvIndex); }
@@ -290,19 +289,14 @@ const char* symbol_get(Pointer ptr)
 Pointer symbol_make(const char* s)
 {
     // Check if this symbol already exists.
-    for (Pointer ptr = valuestack_get(symbolsIndex);
-         ptr.type != Type_nil;
-         ptr = pair_get(ptr, 1)) {
-        Pointer sym = pair_get(ptr, 0);
-        if (strcmp(s, symbol_get(sym)) == 0) {
-            return sym;
-        }
-    }
+    Pointer ptr = symtab_find(s);
 
-    // Create a new symbol, and add it to the symbols list.
-    Pointer ptr = string_make(s);
-    ptr.type = Type_symbol;
-    valuestack_set(symbolsIndex, pair_make(ptr, valuestack_get(symbolsIndex)));
+    if (ptr.type == Type_nil) {
+        // Create a new symbol, and add it to the symbol table.
+        StackIndex symIndex = valuestack_push(string_make(s));
+        symtab_add(symIndex);
+        ptr = valuestack_pop();
+    }
     return ptr;
 }
 
