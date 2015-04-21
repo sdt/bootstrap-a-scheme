@@ -15,7 +15,6 @@
 
 #define ALLOC(type)             ((type*)allocateValue(sizeof(type)))
 #define DEREF(ptr, type)        ((Value_##type*)getValue(ptr, Type_##type))
-#define DEREF_RAW(ptr, type)    ((Value_##type*)getValueRaw(ptr, Type_##type))
 
 typedef struct {
     Pointer relocated;
@@ -113,35 +112,10 @@ static Value_base* allocateValue(int size)
     return base;
 }
 
-static Value_base* getValueRaw(Pointer ptr, Type type)
+static Value_base* getValue(Pointer ptr, Type type)
 {
     type_check(ptr, type);
     return (Value_base*) allocator_getPointer(ptr.offset);
-}
-
-static Value_base* getValue(Pointer ptr, Type type)
-{
-    return getValueRaw(pointer_follow(ptr), type);
-}
-
-Pointer pointer_follow(Pointer ptr)
-{
-    if (!type_isObject(ptr.type)) {
-        return ptr;
-    }
-
-    Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
-    if (base->relocated.type != Type_nil) {
-        printf("Following broken heart for: %s\n", type_name(ptr.type));
-        // This value has been moved to the other heap.
-        base = (Value_base*) allocator_getPointer(base->relocated.offset);
-
-        // I don't quite see what stops this from happening, but if it does,
-        // it's not a good sign.
-        ASSERT(base->relocated.type == Type_nil,
-            "%s value has moved heaps twice", type_name(ptr.type));
-    }
-    return makePointer(ptr.type, (byte*) base);
 }
 
 Pointer boolean_make(int value)
@@ -321,16 +295,14 @@ Pointer pointer_copy(Pointer ptr)
 
     Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
     if (base->relocated.type == Type_nil) {
-        // Be careful to use DEREF_RAW's in here, we don't want to be chasing
-        // broken hearts (because they are all broken).
         switch (ptr.type) {
             case Type_integer: {
-                Value_integer* old = DEREF_RAW(ptr, integer);
+                Value_integer* old = DEREF(ptr, integer);
                 base->relocated = integer_make(old->value);
                 break;
             }
             case Type_lambda: {
-                Value_lambda* old = DEREF_RAW(ptr, lambda);
+                Value_lambda* old = DEREF(ptr, lambda);
                 Value_lambda* new = ALLOC(Value_lambda);
                 base->relocated = makePointer(Type_lambda, (byte*) new);
 
@@ -340,7 +312,7 @@ Pointer pointer_copy(Pointer ptr)
                 break;
             }
             case Type_pair: {
-                Value_pair* old = DEREF_RAW(ptr, pair);
+                Value_pair* old = DEREF(ptr, pair);
                 Value_pair* new = ALLOC(Value_pair);
                 base->relocated = makePointer(Type_pair, (byte*) new);
 
@@ -350,12 +322,12 @@ Pointer pointer_copy(Pointer ptr)
                 break;
             }
             case Type_string: {
-                Value_string* old = DEREF_RAW(ptr, string);
+                Value_string* old = DEREF(ptr, string);
                 base->relocated = string_make(old->value);
                 break;
             }
             case Type_symbol: {
-                Value_symbol* old = DEREF_RAW(ptr, symbol);
+                Value_symbol* old = DEREF(ptr, symbol);
 
                 // Create the symbol as if it were a string.
                 base->relocated = string_make(old->value);

@@ -63,7 +63,6 @@ extern const char*  string_get(Pointer ptr);
 extern Pointer      symbol_make(const char* value);
 extern const char*  symbol_get(Pointer ptr);
 
-extern Pointer      pointer_follow(Pointer ptr);
 extern int          pointer_isFalse(Pointer ptr);
 extern int          pointer_isTrue(Pointer ptr);
 extern Pointer      pointer_copy(Pointer ptr);
