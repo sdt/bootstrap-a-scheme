@@ -57,14 +57,9 @@ static Pointer nil          = { Type_nil, 0 };
 static Pointer false_value  = { Type_boolean, 0 };
 static Pointer true_value   = { Type_boolean, 1 };
 
-static StackIndex rootEnvIndex = -1;
-
 void types_init()
 {
-    rootEnvIndex = valuestack_push(env_make(nil));
 }
-
-Pointer getRootEnv() { return valuestack_get(rootEnvIndex); }
 
 static void collectGarbage();
 

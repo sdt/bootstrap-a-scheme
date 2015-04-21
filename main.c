@@ -20,6 +20,7 @@ int main(int argc, char* argv[])
     int heapSize = 1 * 1024;
     allocator_init(heapSize);
     valuestack_init(heapSize / 16);
+    env_init();
     symtab_init();
     types_init();
     core_init();
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
         }
 
         Pointer list = readLine(input);
-        print(eval(list, getRootEnv()));
+        print(eval(list, env_root()));
     }
 
     return 0;

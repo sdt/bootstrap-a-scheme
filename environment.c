@@ -1,9 +1,26 @@
 #include "environment.h"
 #include "exception.h"
 #include "types.h"
+#include "valuestack.h"
 
 // Environment is a list of (symbol => value) pairs
 // (symbols, outer)
+
+typedef struct {
+    StackIndex rootIndex;
+} EnvironmentData;
+
+static EnvironmentData data;
+
+void env_init()
+{
+    data.rootIndex = valuestack_push(env_make(nil_make()));
+}
+
+Pointer env_root()
+{
+    return valuestack_get(data.rootIndex);
+}
 
 Pointer env_make(Pointer outer)
 {

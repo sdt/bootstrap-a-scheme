@@ -28,7 +28,7 @@ void core_init()
         Handler* h = &handlerTable[i];
         Pointer symbol = symbol_make(h->symbol);
         Pointer value = builtin_make(i);
-        env_set(getRootEnv(), symbol, value);
+        env_set(env_root(), symbol, value);
     }
 }
 
