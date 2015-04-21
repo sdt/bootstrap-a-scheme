@@ -4,20 +4,10 @@
 #include <setjmp.h>
 #include <stdlib.h>
 
-extern jmp_buf exceptionBuf;
-extern char* exceptionMsg;
-extern void throw(const char* msg, ...);
+extern jmp_buf*     exception_buf();
+extern void         exception_throw(const char* msg, ...);
+extern const char*  exception_msg();
 
-#define EXCEPTION_SCOPE \
-    if (setjmp(exceptionBuf) != 0) { \
-        if (exceptionMsg == NULL) { \
-            fprintf(stderr, "(unexpected exception)\n"); \
-        } \
-        else {\
-            fprintf(stderr, "%s\n", exceptionMsg); \
-            free(exceptionMsg); \
-        } \
-        continue; \
-    } else { }
+#define THROW exception_throw
 
 #endif // INCLUDE_EXCEPTION_H

@@ -78,7 +78,7 @@ static void tokeniser_advance(Tokeniser* t)
             case '\\':
                 t->cursor++;
                 switch (*t->cursor) {
-                    case 0:     throw("Expected \", got EOF");
+                    case 0:     THROW("Expected \", got EOF");
                     case 'n':   *wp++ = '\n'; break;
                     case 't':   *wp++ = '\t'; break;
                     case '\\':  *wp++ = '\\'; break;
@@ -91,7 +91,7 @@ static void tokeniser_advance(Tokeniser* t)
                 break;
             }
         }
-        throw("Expected \", got EOF");
+        THROW("Expected \", got EOF");
     }
     else {
         // Scan out a token
@@ -160,7 +160,7 @@ static Pointer readForm(Tokeniser* t);
 static Pointer readList(Tokeniser* t)
 {
     if (tokeniser_eof(t)) {
-        throw("Expected ), got EOF");
+        THROW("Expected ), got EOF");
     }
 
     const char* token = tokeniser_peek(t);

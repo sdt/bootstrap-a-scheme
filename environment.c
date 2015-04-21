@@ -33,6 +33,6 @@ Pointer env_get(Pointer env, Pointer symbol)
             }
         }
     }
-    throw("\"%s\" not found", symbol_get(symbol));
+    THROW("\"%s\" not found", symbol_get(symbol));
     return nil_make();
 }

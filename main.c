@@ -1,4 +1,5 @@
 #include "allocator.h"
+#include "debug.h"
 #include "core.h"
 #include "environment.h"
 #include "exception.h"
@@ -23,9 +24,20 @@ int main(int argc, char* argv[])
     types_init();
     core_init();
 
+    StackIndex prevTop = valuestack_top();
+
     char* input;
     while ((input = getInput("bas> ")) != NULL) {
-        EXCEPTION_SCOPE;
+        StackIndex top = valuestack_top();
+        ASSERT(top == prevTop, "Value stack out of whack! Was %d, is %d",
+            prevTop, top);
+        prevTop = top;
+
+        if (setjmp(*exception_buf()) != 0) {
+            fprintf(stderr, "%s\n", exception_msg());
+            valuestack_popTo(top);
+            continue;
+        }
 
         Pointer list = readLine(input);
         print(eval(list, getRootEnv()));
@@ -95,7 +107,7 @@ Pointer eval(Pointer ast, Pointer env)
         if (op.type == Type_lambda) {
             return lambda_apply(op, args, env);
         }
-        throw("%s is not applicable", type_name(op.type));
+        THROW("%s is not applicable", type_name(op.type));
 
         return ast;
     }

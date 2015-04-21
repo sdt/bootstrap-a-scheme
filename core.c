@@ -52,7 +52,7 @@ static int countArgs(Pointer args)
 #define CHECK_ARGS_COUNT(expected) \
     int argsCount = countArgs(args); \
     if (argsCount != (expected)) { \
-        throw("\"%s\" expects %d arg%s, %d provided", \
+        THROW("\"%s\" expects %d arg%s, %d provided", \
             symbol, expected, PLURAL(expected), argsCount); \
     }
 

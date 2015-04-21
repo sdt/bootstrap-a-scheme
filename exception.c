@@ -5,19 +5,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-jmp_buf exceptionBuf;
-char* exceptionMsg = NULL;
+typedef struct {
+    jmp_buf buf;
+    char    msg[1024];
+} ExceptionData;
 
-// This will be implemented with setjmp/longjmp soon.
-void throw(const char* fmt, ...)
+static ExceptionData ex;
+
+void exception_throw(const char* fmt, ...)
 {
     va_list ap;
-    va_start(ap, fmt);
 
-    if (vasprintf(&exceptionMsg, fmt, ap) < 0) {
-        asprintf(&exceptionMsg, "(exception message too long)");
-    }
+    va_start(ap, fmt);
+    vsnprintf(ex.msg, sizeof(ex.msg), fmt, ap);
     va_end(ap);
 
-    longjmp(exceptionBuf, 1);
+    longjmp(ex.buf, 1);
+}
+
+jmp_buf* exception_buf()
+{
+    return &ex.buf;
+}
+
+const char* exception_msg()
+{
+    return ex.msg;
 }
