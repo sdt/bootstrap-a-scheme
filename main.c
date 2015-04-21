@@ -13,8 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 
-static Pointer eval_list(Pointer list, Pointer env);
-Pointer eval(Pointer ast, Pointer env);
+static Pointer eval_list(StackIndex listIndex, StackIndex envIndex);
+Pointer eval(StackIndex astIndex, StackIndex envIndex);
 
 int main(int argc, char* argv[])
 {
@@ -43,93 +43,124 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        Pointer list = readLine(input);
-        print(eval(list, env_root()));
+        StackIndex astIndex = valuestack_push(readLine(input));
+        print(eval(astIndex, env_root()));
+
+        valuestack_drop(1);
     }
 
     return 0;
 }
 
-Pointer eval(Pointer ast, Pointer env)
+#define GET(stackIndex)                 valuestack_get(stackIndex)
+#define SET(stackIndex, ptr)            valuestack_set(stackIndex, ptr)
+#define PAIR_GET(stackIndex, which)     pair_get(GET(stackIndex), which)
+#define PUSH(ptr)                       valuestack_push(ptr)
+#define NTH(stackIndex, n)              nth(GET(stackIndex), n)
+
+static Pointer nth(Pointer ptr, int n)
 {
-    Pointer op, args;
+    for (int i = 0; i < n; i++) {
+        ptr = pair_get(ptr, 1);
+    }
+    return pair_get(ptr, 0);
+}
+
+static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
+{
+    StackIndex opIndex   = valuestack_reserve();
+    StackIndex argsIndex = valuestack_reserve();
+
     const char* sym;
 
-    ast = pointer_follow(ast);
-    env = pointer_follow(env);
-
-    switch (ast.type) {
+    switch (GET(astIndex).type) {
     default:
-        return ast;
+        return GET(astIndex);
 
     case Type_symbol:
-        return env_get(env, ast);
+        return env_get(GET(envIndex), GET(astIndex));
 
     case Type_pair:
-        op = pair_get(ast, 0);
+        SET(opIndex, PAIR_GET(astIndex, 0));
 
-        if (op.type == Type_symbol) {
-            args = pair_get(ast, 1);
-            sym = symbol_get(op);
+        if (GET(opIndex).type == Type_symbol) {
+            SET(argsIndex, PAIR_GET(astIndex, 1));
+            sym = symbol_get(GET(opIndex));
 
             if (strcmp(sym, "define") == 0) {
-                Pointer symbol = pair_get(args, 0); args = pair_get(args, 1);
-                Pointer value  = pair_get(args, 0); args = pair_get(args, 1);
-                value = eval(value, env);
-                env_set(pointer_follow(env), symbol, eval(value, env));
-                return pointer_follow(value);
+                StackIndex symIndex = PUSH(NTH(argsIndex, 0));
+                StackIndex valIndex = PUSH(NTH(argsIndex, 1));
+                SET(valIndex, eval(valIndex, envIndex));
+                env_set(GET(envIndex), GET(symIndex), GET(valIndex));
+                return GET(valIndex);
             }
 
             if (strcmp(sym, "if") == 0) {
-                Pointer cond = pair_get(args, 0); args = pair_get(args, 1);
-                Pointer thenRet = pair_get(args, 0); args = pair_get(args, 1);
-                Pointer elseRet = (args.type == Type_pair) ? pair_get(args, 0)
-                                                        : args;
-                if (!pointer_isFalse(eval(cond, env))) {
-                    return eval(thenRet, env);
-                }
-                else {
-                    return eval(elseRet, env);
-                }
+                StackIndex condIndex = PUSH(NTH(argsIndex, 0));
+                int which = pointer_isTrue(eval(condIndex, envIndex)) ? 1 : 2;
+                StackIndex retIndex = PUSH(NTH(argsIndex, which));
+
+                return eval(retIndex, envIndex);
             }
 
+            /*
             if (strcmp(sym, "lambda") == 0) {
                 Pointer params = pair_get(args, 0); args = pair_get(args, 1);
                 Pointer body   = pair_get(args, 0); args = pair_get(args, 1);
                 return lambda_make(params, body, env);
             }
+            */
         }
 
         // If we get here, no special forms applied.
-        ast  = eval_list(ast, env);
-        op   = pair_get(ast, 0);
-        args = pair_get(ast, 1);
+        SET(astIndex, eval_list(astIndex, envIndex));
 
-        if (op.type == Type_builtin) {
-            return builtin_apply(op, args, env);
-        }
-        if (op.type == Type_lambda) {
-            return lambda_apply(op, args, env);
-        }
-        THROW("%s is not applicable", type_name(op.type));
+        SET(opIndex,   PAIR_GET(astIndex, 0));
+        SET(argsIndex, PAIR_GET(astIndex, 1));
 
-        return ast;
+        switch (GET(opIndex).type) {
+            case Type_builtin:
+                return builtin_apply(GET(opIndex), argsIndex, envIndex);
+
+/*
+            case Type_lambda:
+                return lambda_apply(opIndex, argsIndex, envIndex);
+*/
+
+            default:
+                THROW("%s is not applicable", type_name(GET(opIndex).type));
+                break;
+        }
+
+        // We don't actually get here.
+        return GET(astIndex);
     }
 }
 
-static Pointer eval_list(Pointer list, Pointer env)
+Pointer eval(StackIndex astIndex, StackIndex envIndex)
 {
-    if (list.type == Type_nil) {
-        return list;
+    // Rather than manage the stack inside eval, handle it all here.
+    int top = valuestack_top();
+    Pointer ret = _eval(astIndex, envIndex);
+    valuestack_popTo(top);
+    return ret;
+}
+
+static Pointer eval_list(StackIndex listIndex, StackIndex envIndex)
+{
+    if (GET(listIndex).type == Type_nil) {
+        return GET(listIndex);
     }
 
-    list = pointer_follow(list);
-    env  = pointer_follow(env);
+    StackIndex carIndex = PUSH(PAIR_GET(listIndex, 0));
+    StackIndex cdrIndex = PUSH(PAIR_GET(listIndex, 1));
 
-    Pointer car = eval(pair_get(list, 0), env = pointer_follow(env));
-    list = pointer_follow(list);
-    env  = pointer_follow(env);
+    SET(carIndex, eval(carIndex, envIndex));
+    SET(cdrIndex, eval_list(cdrIndex, envIndex));
 
-    return pair_make(pointer_follow(car),
-                     eval_list(pair_get(list, 1), pointer_follow(env)));
+    Pointer ret = pair_make(GET(carIndex), GET(cdrIndex));
+
+    valuestack_drop(2);
+
+    return ret;
 }

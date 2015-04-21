@@ -28,6 +28,11 @@ StackIndex valuestack_push(Pointer ptr)
     return index;
 }
 
+StackIndex valuestack_reserve()
+{
+    return valuestack_push(nil_make());
+}
+
 Pointer valuestack_pop()
 {
     ASSERT(vs.top >= 0, "Value stack underflow");

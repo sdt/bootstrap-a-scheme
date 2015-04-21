@@ -1,4 +1,6 @@
 #include "environment.h"
+
+#include "basetypes.h"
 #include "exception.h"
 #include "types.h"
 #include "valuestack.h"
@@ -17,9 +19,9 @@ void env_init()
     data.rootIndex = valuestack_push(env_make(nil_make()));
 }
 
-Pointer env_root()
+StackIndex env_root()
 {
-    return valuestack_get(data.rootIndex);
+    return data.rootIndex;
 }
 
 Pointer env_make(Pointer outer)

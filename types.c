@@ -90,6 +90,11 @@ int pointer_isFalse(Pointer ptr)
     return (ptr.type == Type_boolean) && (ptr.offset == 0);
 }
 
+int pointer_isTrue(Pointer ptr)
+{
+    return !pointer_isFalse(ptr);
+}
+
 static Pointer makePointer(Type type, byte* raw)
 {
     Pointer ptr = { type, allocator_getOffset(raw) };
@@ -156,10 +161,10 @@ Pointer builtin_make(int offset)
     return ptr;
 }
 
-Pointer builtin_apply(Pointer ptr, Pointer args, Pointer env)
+Pointer builtin_apply(Pointer ptr, StackIndex argsIndex, StackIndex envIndex)
 {
     type_check(ptr, Type_builtin);
-    return core_apply(ptr.offset, args, env);
+    return core_apply(ptr.offset, argsIndex, envIndex);
 }
 
 Pointer integer_make(int value)

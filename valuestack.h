@@ -1,12 +1,12 @@
 #ifndef INCLUDE_VALUESTACK_H
 #define INCLUDE_VALUESTACK_H
 
-typedef int StackIndex;
-
+#include "basetypes.h"
 #include "types.h"
 
 extern void         valuestack_init(int stackSize);
 extern StackIndex   valuestack_push(Pointer ptr);
+extern StackIndex   valuestack_reserve();
 extern Pointer      valuestack_pop();
 extern StackIndex   valuestack_drop(int howMany);
 extern StackIndex   valuestack_popTo(StackIndex index);

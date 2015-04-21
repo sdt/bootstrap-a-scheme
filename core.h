@@ -1,7 +1,7 @@
 #ifndef INCLUDE_CORE_H
 #define INCLUDE_CORE_H
 
-#include "types.h"
+#include "valuestack.h"
 
 #define CORE_HANDLERS_XLIST \
     X("cons",       cons)           \
@@ -28,6 +28,7 @@ typedef enum {
 } CoreHandlerId;
 
 extern void     core_init();
-extern Pointer  core_apply(CoreHandlerId id, Pointer args, Pointer env);
+extern Pointer  core_apply(CoreHandlerId id,
+                           StackIndex argsIndex, StackIndex envIndex);
 
 #endif // INCLUDE_CORE_H

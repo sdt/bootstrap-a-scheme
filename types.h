@@ -2,6 +2,7 @@
 #define INCLUDE_TYPES_H
 
 #include "allocator.h"
+#include "basetypes.h"
 
 /* Use an X-macro to define the types. This list will get reused in a number of
  * places. see: http://en.wikipedia.org/wiki/X_Macro
@@ -34,7 +35,7 @@ typedef struct _Pointer {
 extern Pointer      boolean_make(int value);
 extern int          boolean_get();
 
-extern Pointer      builtin_apply(Pointer ptr, Pointer args, Pointer env);
+extern Pointer      builtin_apply(Pointer ptr, StackIndex argsIndex, StackIndex envIndex);
 extern Pointer      builtin_make(int index);
 
 extern Pointer      integer_make(int value);
@@ -60,6 +61,7 @@ extern const char*  symbol_get(Pointer ptr);
 
 extern Pointer      pointer_follow(Pointer ptr);
 extern int          pointer_isFalse(Pointer ptr);
+extern int          pointer_isTrue(Pointer ptr);
 extern Pointer      pointer_copy(Pointer ptr);
 
 extern Pointer      type_check(Pointer ptr, Type expected);
