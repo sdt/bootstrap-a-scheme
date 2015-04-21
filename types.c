@@ -158,11 +158,13 @@ int integer_get(Pointer ptr)
     return raw->value;
 }
 
-Pointer lambda_prepareEnv(StackIndex lambdaIndex, StackIndex argsIndex,
-                         StackIndex envIndex)
+Pointer lambda_prepareEnv(StackIndex lambdaIndex, StackIndex argsIndex)
 {
+    Pointer lambda = GET(lambdaIndex);
+
+    StackIndex paramsIndex = PUSH(lambda_getParams(lambda));
+    StackIndex envIndex    = PUSH(lambda_getEnv(lambda));
     StackIndex innerIndex  = PUSH(env_make(envIndex));
-    StackIndex paramsIndex = PUSH(lambda_getParams(GET(lambdaIndex)));
 
     if (type_isList(GET(paramsIndex).type)) {
         while (GET(paramsIndex).type == Type_pair) {
@@ -181,7 +183,7 @@ Pointer lambda_prepareEnv(StackIndex lambdaIndex, StackIndex argsIndex,
     }
 
     Pointer ret = GET(innerIndex);
-    DROP(2);
+    DROP(3);
     return ret;
 }
 
@@ -201,6 +203,12 @@ Pointer lambda_getBody(Pointer ptr)
 {
     Value_lambda* raw = DEREF(ptr, lambda);
     return raw->body;
+}
+
+Pointer lambda_getEnv(Pointer ptr)
+{
+    Value_lambda* raw = DEREF(ptr, lambda);
+    return raw->env;
 }
 
 Pointer lambda_getParams(Pointer ptr)

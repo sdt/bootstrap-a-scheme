@@ -42,12 +42,12 @@ extern Pointer      integer_make(int value);
 extern int          integer_get(Pointer ptr);
 
 extern Pointer      lambda_prepareEnv(StackIndex lambdaIndex,
-                                      StackIndex argsIndex,
-                                      StackIndex envIndex);
+                                      StackIndex argsIndex);
 extern Pointer      lambda_make(StackIndex params, StackIndex body,
                                 StackIndex env);
 extern Pointer      lambda_getBody(Pointer ptr);
 extern Pointer      lambda_getParams(Pointer ptr);
+extern Pointer      lambda_getEnv(Pointer ptr);
 
 extern Pointer      list_nth(Pointer ptr, int n);
 

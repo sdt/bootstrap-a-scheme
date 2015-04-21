@@ -18,7 +18,7 @@ Pointer eval(StackIndex astIndex, StackIndex envIndex);
 
 int main(int argc, char* argv[])
 {
-    int heapSize = 1 * 1024;
+    int heapSize = 16 * 1024 * 1024;
 
     allocator_init(heapSize);
     valuestack_init(heapSize / 4);
@@ -112,7 +112,7 @@ static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
                 return builtin_apply(GET(opIndex), argsIndex, envIndex);
 
             case Type_lambda:
-                SET(envIndex, lambda_prepareEnv(opIndex, argsIndex, envIndex));
+                SET(envIndex, lambda_prepareEnv(opIndex, argsIndex));
                 SET(astIndex, lambda_getBody(GET(opIndex)));
                 continue; //TCO
 
