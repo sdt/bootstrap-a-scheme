@@ -18,10 +18,10 @@ Pointer eval(StackIndex astIndex, StackIndex envIndex);
 
 int main(int argc, char* argv[])
 {
-    int heapSize = 1 * 1024;
+    int heapSize = 2 * 1024;
 
     allocator_init(heapSize);
-    valuestack_init(heapSize / 16);
+    valuestack_init(heapSize / 4);
     env_init();
     symtab_init();
     core_init();

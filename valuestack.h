@@ -14,6 +14,7 @@ extern Pointer      valuestack_get(StackIndex index);
 extern Pointer      valuestack_set(StackIndex index, Pointer ptr);
 extern void         valuestack_swapHeaps();
 extern StackIndex   valuestack_top();
+extern void         valuestack_dump();
 
 // These probably should go elsewhere.
 #define GET(stackIndex)                 valuestack_get(stackIndex)

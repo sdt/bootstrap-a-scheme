@@ -22,6 +22,9 @@ void valuestack_init(int stackSize)
 
 StackIndex valuestack_push(Pointer ptr)
 {
+    if (vs.top >= vs.size) {
+        valuestack_dump();
+    }
     ASSERT(vs.top < vs.size, "Value stack overflow");
 
     int index = vs.top++;
@@ -90,7 +93,7 @@ StackIndex valuestack_top()
     return vs.top;
 }
 
-void valuestack_print()
+void valuestack_dump()
 {
     for (StackIndex index = 0; index < vs.top; index++) {
         printf("STACK[%d]:", index);
