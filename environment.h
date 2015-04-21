@@ -5,7 +5,7 @@
 #include "types.h"
 
 extern void         env_init();
-extern StackIndex   env_root();
+extern Pointer      env_root();
 extern Pointer      env_make(StackIndex outerIndex);
 extern void         env_set(StackIndex envIndex,
                             StackIndex symIndex, StackIndex valIndex);

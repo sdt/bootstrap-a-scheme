@@ -18,7 +18,7 @@ Pointer eval(StackIndex astIndex, StackIndex envIndex);
 
 int main(int argc, char* argv[])
 {
-    int heapSize = 2 * 1024;
+    int heapSize = 1 * 1024;
 
     allocator_init(heapSize);
     valuestack_init(heapSize / 4);
@@ -43,10 +43,12 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        StackIndex astIndex = valuestack_push(readLine(input));
-        print(eval(astIndex, env_root()));
+        StackIndex astIndex = PUSH(readLine(input));
+        StackIndex envIndex = PUSH(env_root());
 
-        valuestack_drop(1);
+        print(eval(astIndex, envIndex));
+
+        valuestack_drop(2);
     }
 
     return 0;
@@ -59,14 +61,15 @@ static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
 
     const char* sym;
 
-    switch (GET(astIndex).type) {
-    default:
-        return GET(astIndex);
+    while (1) {
+        Type astType = GET(astIndex).type;
 
-    case Type_symbol:
-        return env_get(GET(envIndex), GET(astIndex));
+        if (astType == Type_symbol)
+            return env_get(GET(envIndex), GET(astIndex));
 
-    case Type_pair:
+        if (astType != Type_pair)
+            return GET(astIndex);
+
         SET(opIndex, PAIR_GET(astIndex, 0));
 
         if (GET(opIndex).type == Type_symbol) {
@@ -83,10 +86,12 @@ static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
 
             if (strcmp(sym, "if") == 0) {
                 StackIndex condIndex = PUSH(NTH(argsIndex, 0));
+                // TODO: handle the no-else case
                 int which = pointer_isTrue(eval(condIndex, envIndex)) ? 1 : 2;
-                StackIndex retIndex = PUSH(NTH(argsIndex, which));
+                POP(); // condIndex
 
-                return eval(retIndex, envIndex);
+                SET(astIndex, NTH(argsIndex, which));
+                continue; // TCO
             }
 
             if (strcmp(sym, "lambda") == 0) {
@@ -107,15 +112,14 @@ static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
                 return builtin_apply(GET(opIndex), argsIndex, envIndex);
 
             case Type_lambda:
-                return lambda_apply(opIndex, argsIndex, envIndex);
+                SET(envIndex, lambda_prepareEnv(opIndex, argsIndex, envIndex));
+                SET(astIndex, lambda_getBody(GET(opIndex)));
+                continue; //TCO
 
             default:
                 THROW("%s is not applicable", type_name(GET(opIndex).type));
                 break;
         }
-
-        // We don't actually get here.
-        return GET(astIndex);
     }
 }
 

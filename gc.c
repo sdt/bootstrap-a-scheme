@@ -14,5 +14,6 @@ void gc_run()
 
     int after = allocator_bytesAvailable();
     fprintf(stderr, "Garbage collected: %d bytes freed.\n", after - before);
-    fprintf(stderr, "Heap: %d used, %d free.\n", allocator_bytesUsed(), after);
+    fprintf(stderr, "Heap: %d used, %d free. Stack: %d used.\n",
+        allocator_bytesUsed(), after, valuestack_top());
 }

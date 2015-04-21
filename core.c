@@ -1,6 +1,7 @@
 #include "core.h"
 #include "environment.h"
 #include "exception.h"
+#include "gc.h"
 #include "types.h"
 #include "valuestack.h"
 
@@ -30,13 +31,14 @@ void core_init()
 {
     StackIndex symIndex = PUSH(nil_make());
     StackIndex valIndex = RESERVE();
+    StackIndex envIndex = PUSH(env_root());
 
     for (int i = 0; i < Core_COUNT; i++) {
         Handler* h = &handlerTable[i];
         SET(symIndex, symbol_make(h->symbol));
         SET(valIndex, builtin_make(i));
 
-        env_set(env_root(), symIndex, valIndex);
+        env_set(envIndex, symIndex, valIndex);
     }
 
     DROP(2);
@@ -131,6 +133,26 @@ HANDLER(cdr)
     Pointer pair = ARG(args, pair);
 
     return pair_get(pair, 1);
+}
+
+HANDLER(dump)
+{
+    valuestack_dump();
+    return nil_make();
+}
+
+HANDLER(equals)
+{
+    CHECK_ARGS_COUNT(2);
+
+    return boolean_make(integer_get(NTH(argsIndex, 0))
+                     == integer_get(NTH(argsIndex, 1)));
+}
+
+HANDLER(gc)
+{
+    gc_run();
+    return nil_make();
 }
 
 HANDLER(isEmpty)

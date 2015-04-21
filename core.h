@@ -7,8 +7,11 @@
     X("cons",       cons)           \
     X("car",        car)            \
     X("cdr",        cdr)            \
+    X("*dump*",     dump)           \
     X("empty?",     isEmpty)        \
-    X("+",          add)
+    X("*gc*",       gc)             \
+    X("+",          add)            \
+    X("=",          equals)
 
 /*
     X("-", sub) \
@@ -16,7 +19,6 @@
     X("/", div) \
     X("car", car) \
     X("cdr", cdr) \
-    X("=", equals)
 */
 
 typedef enum {

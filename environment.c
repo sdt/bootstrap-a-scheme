@@ -23,9 +23,9 @@ void env_init()
     DROP(1);
 }
 
-StackIndex env_root()
+Pointer env_root()
 {
-    return data.rootIndex;
+    return GET(data.rootIndex);
 }
 
 Pointer env_make(StackIndex outerIndex)

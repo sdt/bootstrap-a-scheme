@@ -106,6 +106,9 @@ static Value_base* allocateValue(int size)
     if (base == NULL) {
         gc_run();
         base = (Value_base*) allocator_alloc(size);
+        if (base == NULL) {
+            valuestack_dump();
+        }
         ASSERT(base != NULL, "Out of memory");
     }
     base->relocated = nil;
@@ -155,8 +158,8 @@ int integer_get(Pointer ptr)
     return raw->value;
 }
 
-Pointer lambda_apply(StackIndex lambdaIndex, StackIndex argsIndex,
-                    StackIndex envIndex)
+Pointer lambda_prepareEnv(StackIndex lambdaIndex, StackIndex argsIndex,
+                         StackIndex envIndex)
 {
     StackIndex innerIndex  = PUSH(env_make(envIndex));
     StackIndex paramsIndex = PUSH(lambda_getParams(GET(lambdaIndex)));
@@ -177,13 +180,8 @@ Pointer lambda_apply(StackIndex lambdaIndex, StackIndex argsIndex,
         env_set(innerIndex, paramsIndex, argsIndex);
     }
 
-    StackIndex bodyIndex = PUSH(lambda_getBody(GET(lambdaIndex)));
-
-    extern Pointer eval(StackIndex, StackIndex);
-    Pointer ret = eval(bodyIndex, innerIndex);
-
-    DROP(3);
-
+    Pointer ret = GET(innerIndex);
+    DROP(2);
     return ret;
 }
 
