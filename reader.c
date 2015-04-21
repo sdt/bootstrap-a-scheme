@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "exception.h"
 #include "types.h"
+#include "valuestack.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -169,8 +170,14 @@ static Pointer readList(Tokeniser* t)
         return nil_make();
     }
 
-    Pointer car = readForm(t);
-    return pair_make(car, readList(t));
+    StackIndex carIndex = PUSH(readForm(t));
+    StackIndex cdrIndex = PUSH(readList(t));
+
+    Pointer ret = pair_make(GET(carIndex), GET(cdrIndex));
+
+    DROP(2);
+
+    return ret;
 }
 
 static Pointer readForm(Tokeniser* t)
