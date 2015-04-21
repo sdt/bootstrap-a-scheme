@@ -8,6 +8,7 @@ typedef int StackIndex;
 extern void         valuestack_init(int stackSize);
 extern StackIndex   valuestack_push(Pointer ptr);
 extern Pointer      valuestack_pop();
+extern StackIndex   valuestack_drop(int howMany);
 extern StackIndex   valuestack_popTo(StackIndex index);
 extern Pointer      valuestack_get(StackIndex index);
 extern Pointer      valuestack_set(StackIndex index, Pointer ptr);

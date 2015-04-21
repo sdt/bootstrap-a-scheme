@@ -46,6 +46,16 @@ StackIndex valuestack_popTo(StackIndex index)
     return index;
 }
 
+StackIndex valuestack_drop(int howMany)
+{
+    ASSERT(howMany >= 0, "Can't drop %d values off the stack", howMany);
+    ASSERT(howMany <= vs.top, "Stack has %d values, trying to drop %d\n",
+        vs.top, howMany);
+
+    vs.top -= howMany;
+    return vs.top;
+}
+
 Pointer valuestack_get(StackIndex index)
 {
     ASSERT((index >= 0) && (index < vs.top),
