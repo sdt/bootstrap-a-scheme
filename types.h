@@ -58,7 +58,6 @@ extern Pointer      pair_get(Pointer ptr, int index);
 extern void         pair_set(Pointer ptr, int index, Pointer val);
 
 extern Pointer      string_make(const char* value);
-extern Pointer      string_alloc(int length);
 extern const char*  string_get(Pointer ptr);
 
 extern Pointer      symbol_make(const char* value);

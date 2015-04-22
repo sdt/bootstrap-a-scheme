@@ -38,12 +38,7 @@ typedef struct {
 typedef struct {
     Value_base base;
     char value[1];  // more space is allocated at the end
-} Value_string;
-
-typedef struct {
-    Value_base base;
-    char value[1];  // more space is allocated at the end
-} Value_symbol;
+} Value_cstring;    // this is used for strings and symbols
 
 static const char* typeName[] = {
     #define X(name) #name,
@@ -254,29 +249,38 @@ void pair_set(Pointer ptr, int index, Pointer value)
     raw->value[index] = value;
 }
 
-Pointer string_alloc(int length)
+static Pointer cstring_alloc(int length, Type type)
 {
-    int totalSize = sizeof(Value_string) + length;
-    return makePointer(Type_string, (byte*) allocateValue(totalSize));
+    int totalSize = sizeof(Value_cstring) + length;
+    return makePointer(type, (byte*) allocateValue(totalSize));
+}
+
+static const char* cstring_get(Pointer ptr, Type type)
+{
+    Value_cstring* raw = (Value_cstring*) getValue(ptr, type);
+    return raw->value;
+}
+
+static Pointer cstring_make(const char* s, Type type)
+{
+    Pointer ptr = cstring_alloc(strlen(s), type);
+    strcpy((char*) cstring_get(ptr, type), s);
+    return ptr;
 }
 
 const char* string_get(Pointer ptr)
 {
-    Value_string* raw = DEREF(ptr, string);
-    return raw->value;
+    return cstring_get(ptr, Type_string);
 }
 
 Pointer string_make(const char* s)
 {
-    Pointer ptr = string_alloc(strlen(s));
-    strcpy((char*) string_get(ptr), s);
-    return ptr;
+    return cstring_make(s, Type_string);
 }
 
 const char* symbol_get(Pointer ptr)
 {
-    Value_symbol* raw = DEREF(ptr, symbol);
-    return raw->value;
+    return cstring_get(ptr, Type_symbol);
 }
 
 Pointer symbol_make(const char* s)
@@ -286,7 +290,7 @@ Pointer symbol_make(const char* s)
 
     if (ptr.type == Type_nil) {
         // Create a new symbol, and add it to the symbol table.
-        StackIndex symIndex = PUSH(string_make(s));
+        StackIndex symIndex = PUSH(cstring_make(s, Type_symbol));
         symtab_add(symIndex);
         ptr = POP();
     }
@@ -327,17 +331,12 @@ Pointer pointer_copy(Pointer ptr)
                 }
                 break;
             }
-            case Type_string: {
-                Value_string* old = DEREF(ptr, string);
-                base->relocated = string_make(old->value);
-                break;
-            }
+            case Type_string:
             case Type_symbol: {
-                Value_symbol* old = DEREF(ptr, symbol);
-
-                // Create the symbol as if it were a string.
-                base->relocated = string_make(old->value);
-                base->relocated.type = Type_symbol;
+                // Handle these both as the underlying cstrings.
+                Value_cstring* old =
+                    (Value_cstring*) allocator_getPointer(ptr.offset);
+                base->relocated = cstring_make(old->value, ptr.type);
                 break;
             }
             default: {
