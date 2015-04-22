@@ -54,10 +54,11 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-static Pointer _eval(StackIndex astIndex, StackIndex envIndex)
+static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
 {
     StackIndex opIndex   = valuestack_reserve();
     StackIndex argsIndex = valuestack_reserve();
+    StackIndex envIndex  = PUSH(GET(envInIndex));
 
     const char* sym;
 
