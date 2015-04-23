@@ -26,9 +26,6 @@ void input_init()
 char* input_get(const char* prompt)
 {
     if (isatty(STDIN_FILENO)) {
-        if (line != NULL) {
-            free(line);
-        }
         line = readline(prompt);
         if (line != NULL) {
             add_history(line); // Add input to in-memory history
