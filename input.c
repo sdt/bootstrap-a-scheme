@@ -11,6 +11,8 @@
 #define HISTORY_FILE "~/.bas-history"
 
 const char* historyPath = NULL;
+static char* line = NULL;
+static size_t lineSize = 0;
 
 void input_init()
 {
@@ -23,10 +25,20 @@ void input_init()
 
 char* input_get(const char* prompt)
 {
-    char *line = readline(prompt);
-    if (line != NULL) {
-        add_history(line); // Add input to in-memory history
-        append_history(1, historyPath);
+    if (isatty(STDIN_FILENO)) {
+        if (line != NULL) {
+            free(line);
+        }
+        line = readline(prompt);
+        if (line != NULL) {
+            add_history(line); // Add input to in-memory history
+            append_history(1, historyPath);
+        }
+    }
+    else {
+        if (getline(&line, &lineSize, stdin) < 0) {
+            line = NULL;
+        }
     }
     return line;
 }
