@@ -95,9 +95,7 @@ static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
                 // Install the result into the environment.
                 env_set(envIndex, symIndex, valIndex);
 
-                Pointer ret = GET(valIndex);
-                DROP_ARGS();
-                return ret;
+                DROP_RET(GET(valIndex));
             }
 
             WHEN("if") {
@@ -120,9 +118,7 @@ static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
                 StackIndex paramsIndex = ARG_INDEX(0);
                 StackIndex bodyIndex   = ARG_INDEX(1);
 
-                Pointer ret = lambda_make(paramsIndex, bodyIndex, envIndex);
-                DROP_ARGS();
-                return ret;
+                DROP_RET(lambda_make(paramsIndex, bodyIndex, envIndex));
             }
 
 #undef WHEN

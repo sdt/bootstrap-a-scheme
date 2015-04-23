@@ -21,5 +21,6 @@ extern Pointer    args_checkType(const char* caller, const char* argName,
 #define ARG_CHECKTYPE(n, type, name) \
     args_checkType(symbol, name, GET(ARG_INDEX(n)), Type_##type)
 #define DROP_ARGS()     valuestack_drop(localsCount)
+#define DROP_RET(ptr)   Pointer ret = ptr; DROP_ARGS(); return ret
 
 #endif // INCLUDE_ARGS_H

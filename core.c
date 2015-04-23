@@ -79,33 +79,21 @@ HANDLER(add)
 HANDLER(cons)
 {
     GET_ARGS_EXACTLY(2);
-
-    Pointer ret = pair_make(ARG_INDEX(0), ARG_INDEX(1));
-
-    DROP_ARGS();
-    return ret;
+    DROP_RET(pair_make(ARG_INDEX(0), ARG_INDEX(1)));
 }
 
 HANDLER(car)
 {
     GET_ARGS_EXACTLY(1);
     ARG_CHECKTYPE(0, pair, "arg");
-
-    Pointer ret = pair_get(GET(ARG_INDEX(0)), 0);
-
-    DROP_ARGS();
-    return ret;
+    DROP_RET(pair_get(GET(ARG_INDEX(0)), 0));
 }
 
 HANDLER(cdr)
 {
     GET_ARGS_EXACTLY(1);
     ARG_CHECKTYPE(0, pair, "arg");
-
-    Pointer ret = pair_get(GET(ARG_INDEX(0)), 1);
-
-    DROP_ARGS();
-    return ret;
+    DROP_RET(pair_get(GET(ARG_INDEX(0)), 1));
 }
 
 HANDLER(dump)
@@ -120,11 +108,8 @@ HANDLER(equals)
     ARG_CHECKTYPE(0, integer, "arg 1");
     ARG_CHECKTYPE(1, integer, "arg 2");
 
-    Pointer ret =  boolean_make(integer_get(GET(ARG_INDEX(0)))
-                             == integer_get(GET(ARG_INDEX(1))));
-
-    DROP_ARGS();
-    return ret;
+    DROP_RET(boolean_make(integer_get(GET(ARG_INDEX(0)))
+                       == integer_get(GET(ARG_INDEX(1)))));
 }
 
 HANDLER(gc)
@@ -136,11 +121,7 @@ HANDLER(gc)
 HANDLER(isEmpty)
 {
     GET_ARGS_EXACTLY(1);
-
-    Pointer ret = boolean_make(GET(ARG_INDEX(0)).type == Type_nil);
-
-    DROP_ARGS();
-    return ret;
+    DROP_RET(boolean_make(GET(ARG_INDEX(0)).type == Type_nil));
 }
 
 HANDLER(lt)
@@ -148,12 +129,8 @@ HANDLER(lt)
     GET_ARGS_EXACTLY(2);
     ARG_CHECKTYPE(0, integer, "arg 1");
     ARG_CHECKTYPE(1, integer, "arg 2");
-
-    Pointer ret =  boolean_make(integer_get(GET(ARG_INDEX(0)))
-                             <  integer_get(GET(ARG_INDEX(1))));
-
-    DROP_ARGS();
-    return ret;
+    DROP_RET(boolean_make(integer_get(GET(ARG_INDEX(0)))
+                       <  integer_get(GET(ARG_INDEX(1)))));
 }
 
 HANDLER(mul)
