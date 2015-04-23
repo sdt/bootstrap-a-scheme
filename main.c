@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         prevTop = top;
 
         if (setjmp(*exception_buf()) != 0) {
-            fprintf(stderr, "%s\n", exception_msg());
+            printf("%s\n", exception_msg());
             valuestack_popTo(top);
             continue;
         }

@@ -18,8 +18,6 @@
 /*
     X("-", sub) \
     X("/", div) \
-    X("car", car) \
-    X("cdr", cdr) \
 */
 
 typedef enum {

@@ -55,8 +55,8 @@ Pointer core_apply(CoreHandlerId id, StackIndex argsIndex, StackIndex envIndex)
 
 #define CHECK_TYPE(ptr, expected) \
     if (ptr.type != Type_##expected) { \
-        THROW("%s: expected %s, got %s", \
-            symbol, #expected, type_name(ptr.type)); }
+        THROW("%s: arg is %s, expected %s", \
+            symbol, type_name(ptr.type), #expected); }
 
 
 HANDLER(add)

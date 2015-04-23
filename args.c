@@ -22,8 +22,8 @@ StackIndex args_extract(const char* caller, Pointer args, int min, int max)
     for (int i = 0; i < min; i++) {
         if (args.type != Type_pair) {
             // We've run out of args.
-            THROW("%s: %s %d arg%s expected, %d provided",
-                caller, min == max ? "exactly" : "at least",
+            THROW("%s: %s%d arg%s expected, %d provided",
+                caller, min == max ? "" : "at least ",
                 min, PLURAL(min), i);
         }
         PUSH(pair_get(args, 0));
@@ -40,8 +40,8 @@ StackIndex args_extract(const char* caller, Pointer args, int min, int max)
     if (args.type != Type_nil) {
         int got = max + args_count(args);
 
-        THROW("%s: %s %d arg%s expected, %d provided",
-              caller, min == max ? "exactly" : "no more than",
+        THROW("%s: %s%d arg%s expected, %d provided",
+              caller, min == max ? "" : "no more than ",
               max, PLURAL(max), got);
     }
 
