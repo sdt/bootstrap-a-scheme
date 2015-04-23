@@ -37,13 +37,10 @@ fun bas_run($input) {
 }
 
 fun bas_is($input, $expected, $message = "$input ==> \"$expected\"") {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
     my $got = bas_run($input);
+    $message =~ s/\n/\\n/gm;
     is($got, $expected, $message);
-}
-
-fun bas_like($input, $expected, $message = "$input ==> \"$expected\"") {
-    my $got = bas_run($input);
-    like($got, $expected, $message);
 }
 
 1;
