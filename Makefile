@@ -32,6 +32,9 @@ clean:
 	rm -rf *.o bas
 
 test: bas
+	PERL5LIB=t/lib prove -r t
+
+vtest: bas
 	PERL5LIB=t/lib prove -vr t
 
 -include .deps
