@@ -44,7 +44,7 @@ void core_init()
         env_set(envIndex, symIndex, valIndex);
     }
 
-    DROP(2);
+    DROP(3);
 }
 
 Pointer core_apply(CoreHandlerId id, StackIndex argsIndex, StackIndex envIndex)
@@ -52,24 +52,6 @@ Pointer core_apply(CoreHandlerId id, StackIndex argsIndex, StackIndex envIndex)
     Handler* h = &handlerTable[id];
     return h->f(h->symbol, argsIndex, envIndex);
 }
-
-static int countArgs(Pointer args)
-{
-    int len = 0;
-    for ( ; args.type == Type_pair; args = pair_get(args, 1)) {
-        len++;
-    }
-    return len;
-}
-
-#define CHECK_ARGS_COUNT(expected) \
-    int argsCount = countArgs(GET(argsIndex)); \
-    if (argsCount != (expected)) { \
-        THROW("%s: %d arg%s expected, %d provided", \
-            symbol, expected, PLURAL(expected), argsCount); \
-    }
-
-#define ARGPTR(args)    pair_get(args, 0); args = pair_get(args, 1);
 
 #define CHECK_TYPE(ptr, expected) \
     if (ptr.type != Type_##expected) { \
@@ -134,10 +116,15 @@ HANDLER(dump)
 
 HANDLER(equals)
 {
-    CHECK_ARGS_COUNT(2);
+    GET_ARGS_EXACTLY(2);
+    ARG_CHECKTYPE(0, integer, "arg 1");
+    ARG_CHECKTYPE(1, integer, "arg 2");
 
-    return boolean_make(integer_get(NTH(argsIndex, 0))
-                     == integer_get(NTH(argsIndex, 1)));
+    Pointer ret =  boolean_make(integer_get(GET(ARG_INDEX(0)))
+                             == integer_get(GET(ARG_INDEX(1))));
+
+    DROP_ARGS();
+    return ret;
 }
 
 HANDLER(gc)
@@ -148,21 +135,25 @@ HANDLER(gc)
 
 HANDLER(isEmpty)
 {
-    // There's no allocations going on in here, so it's safe to walk the
-    // raw pointers.
-    CHECK_ARGS_COUNT(1);
-    Pointer args = GET(argsIndex);
+    GET_ARGS_EXACTLY(1);
 
-    Pointer a = ARGPTR(args);
-    return boolean_make(a.type == Type_nil);
+    Pointer ret = boolean_make(GET(ARG_INDEX(0)).type == Type_nil);
+
+    DROP_ARGS();
+    return ret;
 }
 
 HANDLER(lt)
 {
-    CHECK_ARGS_COUNT(2);
+    GET_ARGS_EXACTLY(2);
+    ARG_CHECKTYPE(0, integer, "arg 1");
+    ARG_CHECKTYPE(1, integer, "arg 2");
 
-    return boolean_make(integer_get(NTH(argsIndex, 0))
-                     <  integer_get(NTH(argsIndex, 1)));
+    Pointer ret =  boolean_make(integer_get(GET(ARG_INDEX(0)))
+                             <  integer_get(GET(ARG_INDEX(1))));
+
+    DROP_ARGS();
+    return ret;
 }
 
 HANDLER(mul)
@@ -181,4 +172,3 @@ HANDLER(mul)
 
     return integer_make(product);
 }
-
