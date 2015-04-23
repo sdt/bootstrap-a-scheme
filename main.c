@@ -78,15 +78,30 @@ static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
             SET(argsIndex, PAIR_GET(astIndex, 1));
             symbol = symbol_get(GET(opIndex));
 
-            if (strcmp(symbol, "define") == 0) {
-                StackIndex symIndex = PUSH(NTH(argsIndex, 0));
-                StackIndex valIndex = PUSH(NTH(argsIndex, 1));
+#define WHEN(str) if (strcmp(symbol, str) == 0)
+
+            WHEN("define") {
+                // (define symbol expr)
+                // (define (fn params) body)
+                //      -> (define fn (lambda params body))
+                GET_ARGS_EXACTLY(2);
+                ARG_CHECKTYPE(0, symbol, "arg 1");
+                StackIndex symIndex = ARG_INDEX(0);
+                StackIndex valIndex = ARG_INDEX(1);
+
+                // Evaluate the expression
                 SET(valIndex, eval(valIndex, envIndex));
+
+                // Install the result into the environment.
                 env_set(envIndex, symIndex, valIndex);
-                return GET(valIndex);
+
+                Pointer ret = GET(valIndex);
+                DROP_ARGS();
+                return ret;
             }
 
-            if (strcmp(symbol, "if") == 0) {
+            WHEN("if") {
+                // (if cond then else?)
                 GET_ARGS_BETWEEN(2, 3);
                 if (ARGS_COUNT() == 2) {
                     PUSH(nil_make()); // insert a nil else if not provided
@@ -99,11 +114,18 @@ static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
                 continue; // TCO
             }
 
-            if (strcmp(symbol, "lambda") == 0) {
-                StackIndex paramsIndex = PUSH(NTH(argsIndex, 0));
-                StackIndex bodyIndex   = PUSH(NTH(argsIndex, 1));
-                return lambda_make(paramsIndex, bodyIndex, envIndex);
+            WHEN("lambda") {
+                // (lambda params body)
+                GET_ARGS_EXACTLY(2);
+                StackIndex paramsIndex = ARG_INDEX(0);
+                StackIndex bodyIndex   = ARG_INDEX(1);
+
+                Pointer ret = lambda_make(paramsIndex, bodyIndex, envIndex);
+                DROP_ARGS();
+                return ret;
             }
+
+#undef WHEN
         }
 
         // If we get here, no special forms applied.

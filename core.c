@@ -70,8 +70,6 @@ static int countArgs(Pointer args)
     }
 
 #define ARGPTR(args)    pair_get(args, 0); args = pair_get(args, 1);
-#define ARG(args, type)     type_check(pair_get(args, 0), Type_##type); \
-                            args = pair_get(args, 1);
 
 #define CHECK_TYPE(ptr, expected) \
     if (ptr.type != Type_##expected) { \
@@ -108,26 +106,24 @@ HANDLER(cons)
 
 HANDLER(car)
 {
-    // There's no allocations going on in here, so it's safe to walk the
-    // raw pointers.
-    CHECK_ARGS_COUNT(1);
-    Pointer args = GET(argsIndex);
+    GET_ARGS_EXACTLY(1);
+    ARG_CHECKTYPE(0, pair, "arg");
 
-    Pointer pair = ARG(args, pair);
+    Pointer ret = pair_get(GET(ARG_INDEX(0)), 0);
 
-    return pair_get(pair, 0);
+    DROP_ARGS();
+    return ret;
 }
 
 HANDLER(cdr)
 {
-    // There's no allocations going on in here, so it's safe to walk the
-    // raw pointers.
-    CHECK_ARGS_COUNT(1);
-    Pointer args = GET(argsIndex);
+    GET_ARGS_EXACTLY(1);
+    ARG_CHECKTYPE(0, pair, "arg");
 
-    Pointer pair = ARG(args, pair);
+    Pointer ret = pair_get(GET(ARG_INDEX(0)), 1);
 
-    return pair_get(pair, 1);
+    DROP_ARGS();
+    return ret;
 }
 
 HANDLER(dump)

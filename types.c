@@ -4,6 +4,7 @@
 #include "core.h"
 #include "debug.h"
 #include "environment.h"
+#include "exception.h"
 #include "gc.h"
 #include "symtab.h"
 #include "valuestack.h"
@@ -60,7 +61,7 @@ const char* type_name(int type)
     return "(invalid type)";
 }
 
-Pointer type_check(Pointer ptr, Type expected)
+static Pointer type_assert(Pointer ptr, Type expected)
 {
     ASSERT(ptr.type == expected, "Expected %s, got %s",
            type_name(expected), type_name(ptr.type));
@@ -112,7 +113,7 @@ static Value_base* allocateValue(int size)
 
 static Value_base* getValue(Pointer ptr, Type type)
 {
-    type_check(ptr, type);
+    type_assert(ptr, type);
     return (Value_base*) allocator_getPointer(ptr.offset);
 }
 
@@ -123,7 +124,7 @@ Pointer boolean_make(int value)
 
 int boolean_get(Pointer ptr)
 {
-    type_check(ptr, Type_boolean);
+    type_assert(ptr, Type_boolean);
     return ptr.offset;
 }
 
@@ -135,7 +136,7 @@ Pointer builtin_make(int offset)
 
 Pointer builtin_apply(Pointer ptr, StackIndex argsIndex, StackIndex envIndex)
 {
-    type_check(ptr, Type_builtin);
+    type_assert(ptr, Type_builtin);
     return core_apply(ptr.offset, argsIndex, envIndex);
 }
 

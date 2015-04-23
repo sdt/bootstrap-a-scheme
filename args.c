@@ -47,3 +47,13 @@ StackIndex args_extract(const char* caller, Pointer args, int min, int max)
 
     return before;
 }
+
+Pointer args_checkType(const char* caller, const char* argName,
+                       Pointer argPtr, Type expected)
+{
+    if (argPtr.type != expected) {
+        THROW("%s: %s is %s, expected %s",
+            caller, argName, type_name(argPtr.type), type_name(expected));
+    }
+    return argPtr;
+}

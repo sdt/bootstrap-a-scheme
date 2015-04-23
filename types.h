@@ -67,7 +67,6 @@ extern int          pointer_isFalse(Pointer ptr);
 extern int          pointer_isTrue(Pointer ptr);
 extern Pointer      pointer_copy(Pointer ptr);
 
-extern Pointer      type_check(Pointer ptr, Type expected);
 extern int          type_isObject(Type type);
 extern const char*  type_name(int type);
 extern void         print(Pointer ptr);
