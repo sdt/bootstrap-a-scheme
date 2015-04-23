@@ -13,7 +13,7 @@ OBJECTS=$(SOURCES:%.c=%.o)
 CCFLAGS=-Wall $(INCPATHS)
 LDFLAGS=-ggdb $(LIBPATHS) -lreadline -lhistory
 
-.PHONY:	all clean
+.PHONY:	all clean test
 
 .SUFFIXES: .c .o
 
@@ -30,5 +30,8 @@ bas: $(OBJECTS)
 
 clean:
 	rm -rf *.o bas
+
+test: bas
+	PERL5LIB=t/lib prove -vr t
 
 -include .deps
