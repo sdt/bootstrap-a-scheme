@@ -8,6 +8,13 @@ bas_is('(+ 1 2 3)', 6);
 bas_is('(+ "a")',   '+: arg is string, expected integer');
 bas_is('(+ 1 "a")', '+: arg is string, expected integer');
 
+bas_is('(-)',       "-: at least 1 arg expected, 0 provided");
+bas_is('(- 1)',     -1);
+bas_is('(- 1 2)',   -1);
+bas_is('(- 1 2 3)', -4);
+bas_is('(- "a")',   '-: arg is string, expected integer');
+bas_is('(- 1 "a")', '-: arg is string, expected integer');
+
 note '*';
 bas_is('(*)',        1);
 bas_is('(* 2)',      2);

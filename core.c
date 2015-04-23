@@ -172,3 +172,31 @@ HANDLER(mul)
 
     return integer_make(product);
 }
+
+HANDLER(sub)
+{
+    Pointer args = GET(argsIndex);
+    if (args.type == Type_nil) {
+        THROW("%s: at least 1 arg expected, 0 provided", symbol);
+    }
+
+    Pointer intPtr = pair_get(args, 0);
+    CHECK_TYPE(intPtr, integer);
+    int result = integer_get(intPtr);
+
+    args = pair_get(args, 1);
+    if (args.type == Type_nil) {
+        // Only one argument, negate it.
+        return integer_make(- result);
+    }
+
+    for ( ; args.type != Type_nil; args = pair_get(args, 1)) {
+
+        Pointer intPtr = pair_get(args, 0);
+        CHECK_TYPE(intPtr, integer);
+
+        result -= integer_get(intPtr);
+    }
+
+    return integer_make(result);
+}

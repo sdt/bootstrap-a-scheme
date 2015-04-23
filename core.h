@@ -11,12 +11,12 @@
     X("empty?",     isEmpty)        \
     X("*gc*",       gc)             \
     X("+",          add)            \
+    X("-",          sub)            \
     X("<",          lt)             \
     X("*",          mul)            \
     X("=",          equals)
 
 /*
-    X("-", sub) \
     X("/", div) \
 */
 
