@@ -1,4 +1,5 @@
 #include "allocator.h"
+#include "args.h"
 #include "debug.h"
 #include "core.h"
 #include "environment.h"
@@ -60,7 +61,7 @@ static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
     StackIndex argsIndex = valuestack_reserve();
     StackIndex envIndex  = PUSH(GET(envInIndex));
 
-    const char* sym;
+    const char* symbol;
 
     while (1) {
         Type astType = GET(astIndex).type;
@@ -75,9 +76,9 @@ static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
 
         if (GET(opIndex).type == Type_symbol) {
             SET(argsIndex, PAIR_GET(astIndex, 1));
-            sym = symbol_get(GET(opIndex));
+            symbol = symbol_get(GET(opIndex));
 
-            if (strcmp(sym, "define") == 0) {
+            if (strcmp(symbol, "define") == 0) {
                 StackIndex symIndex = PUSH(NTH(argsIndex, 0));
                 StackIndex valIndex = PUSH(NTH(argsIndex, 1));
                 SET(valIndex, eval(valIndex, envIndex));
@@ -85,17 +86,20 @@ static Pointer _eval(StackIndex astIndex, StackIndex envInIndex)
                 return GET(valIndex);
             }
 
-            if (strcmp(sym, "if") == 0) {
-                StackIndex condIndex = PUSH(NTH(argsIndex, 0));
-                // TODO: handle the no-else case
-                int which = pointer_isTrue(eval(condIndex, envIndex)) ? 1 : 2;
-                POP(); // condIndex
+            if (strcmp(symbol, "if") == 0) {
+                GET_ARGS_BETWEEN(2, 3);
+                if (ARGS_COUNT() == 2) {
+                    PUSH(nil_make()); // insert a nil else if not provided
+                }
 
-                SET(astIndex, NTH(argsIndex, which));
+                Pointer cond = eval(ARG_INDEX(0), envIndex);
+                SET(astIndex, GET(ARG_INDEX(pointer_isTrue(cond) ? 1 : 2)));
+
+                DROP_ARGS();
                 continue; // TCO
             }
 
-            if (strcmp(sym, "lambda") == 0) {
+            if (strcmp(symbol, "lambda") == 0) {
                 StackIndex paramsIndex = PUSH(NTH(argsIndex, 0));
                 StackIndex bodyIndex   = PUSH(NTH(argsIndex, 1));
                 return lambda_make(paramsIndex, bodyIndex, envIndex);

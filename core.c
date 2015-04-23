@@ -1,4 +1,6 @@
 #include "core.h"
+
+#include "args.h"
 #include "environment.h"
 #include "exception.h"
 #include "gc.h"
@@ -60,49 +62,6 @@ static int countArgs(Pointer args)
     return len;
 }
 
-static StackIndex extractArgs(const char* caller, Pointer args,
-                              int min, int max)
-{
-    StackIndex before = valuestack_top();
-
-    // First process the mandatory args.
-    for (int i = 0; i < min; i++) {
-        if (args.type != Type_pair) {
-            // We've run out of args.
-            THROW("%s: %s %d arg%s expected, %d provided",
-                caller, min == max ? "exactly" : "at least",
-                min, PLURAL(min), i);
-        }
-        PUSH(pair_get(args, 0));
-        args = pair_get(args, 1);
-    }
-
-    // Now process the optional args.
-    for (int i = min; args.type != Type_nil && (i < max); i++) {
-        PUSH(pair_get(args, 0));
-        args = pair_get(args, 1);
-    }
-
-    // Now check that there aren't any more args.
-    if (args.type != Type_nil) {
-        int got = max + countArgs(args);
-
-        THROW("%s: %s %d arg%s expected, %d provided",
-              caller, min == max ? "exactly" : "no more than",
-              max, PLURAL(max), got);
-    }
-
-    return before;
-}
-
-
-#define GET_ARGS_BETWEEN(min, max) \
-    StackIndex localsIndex = extractArgs(symbol, GET(argsIndex), min, max); \
-    int localsCount = valuestack_top() - localsIndex;
-#define GET_ARGS_EXACTLY(count) GET_ARGS_BETWEEN(count, count)
-#define GET_ARG_INDEX(n)  (localsIndex+(n))
-#define DROP_ARGS() valuestack_popTo(localsIndex)
-
 #define CHECK_ARGS_COUNT(expected) \
     int argsCount = countArgs(GET(argsIndex)); \
     if (argsCount != (expected)) { \
@@ -141,7 +100,7 @@ HANDLER(cons)
 {
     GET_ARGS_EXACTLY(2);
 
-    Pointer ret = pair_make(GET_ARG_INDEX(0), GET_ARG_INDEX(1));
+    Pointer ret = pair_make(ARG_INDEX(0), ARG_INDEX(1));
 
     DROP_ARGS();
     return ret;
