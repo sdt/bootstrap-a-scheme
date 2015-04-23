@@ -43,4 +43,11 @@ fun bas_is($input, $expected, $message = "$input ==> \"$expected\"") {
     is($got, $expected, $message);
 }
 
+fun bas_like($input, $regex, $message = "$input =~ /$regex/") {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    my $got = bas_run($input);
+    $message =~ s/\n/\\n/gm;
+    like($got, $regex, $message);
+}
+
 1;
