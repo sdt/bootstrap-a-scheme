@@ -98,6 +98,9 @@ static Pointer makePointer(Type type, byte* raw)
 
 static Value_base* allocateValue(int size)
 {
+#if DEBUG_GC_EVERY_ALLOC
+    gc_run();
+#endif
     Value_base* base = (Value_base*) allocator_alloc(size);
     if (base == NULL) {
         gc_run();

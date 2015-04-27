@@ -52,6 +52,9 @@ void allocator_swapHeaps()
 {
     allocator.activeHeap ^= 1;
     allocator.bytesUsed = 0;
+#if DEBUG_WIPE_HEAP
+    memset(allocator.heap[allocator.activeHeap], 'A', allocator.heapSize);
+#endif
 }
 
 unsigned allocator_getOffset(byte* pointer)
