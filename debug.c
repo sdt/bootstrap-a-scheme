@@ -1,8 +1,28 @@
 #include "debug.h"
 
+#include <execinfo.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#define STACKTRACE_SIZE 16
+
+void
+stacktrace(int skip)
+{
+    void *array[STACKTRACE_SIZE];
+    size_t size;
+    char **strings;
+    size_t i;
+
+    size = backtrace(array, STACKTRACE_SIZE);
+    strings = backtrace_symbols(array, size);
+
+    for (i = skip + 1; i < size; i++) {
+        printf("%s\n", strings[i]);
+    }
+    free(strings);
+}
 
 void assert_verbose(int cond, const char* file, int line, const char* fmt, ...)
 {
@@ -18,6 +38,8 @@ void assert_verbose(int cond, const char* file, int line, const char* fmt, ...)
     va_end(ap);
 
     fprintf(stderr, "\n");
+
+    stacktrace(1);
 
     exit(1);
 }
