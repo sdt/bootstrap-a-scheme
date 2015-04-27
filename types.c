@@ -274,9 +274,19 @@ const char* string_get(Pointer ptr)
     return cstring_get(ptr, Type_string);
 }
 
+Pointer string_alloc(int length)
+{
+    return cstring_alloc(length, Type_string);
+}
+
 Pointer string_make(const char* s)
 {
     return cstring_make(s, Type_string);
+}
+
+Pointer symbol_alloc(int length)
+{
+    return cstring_alloc(length, Type_symbol);
 }
 
 const char* symbol_get(Pointer ptr)

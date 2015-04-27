@@ -9,17 +9,47 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ARRAY_SIZE(a)   (sizeof(a)/sizeof((a)[0]))
-
 typedef struct {
-    char* cursor;
-    char* token;
+    const char* cursor;
+    StackIndex tokenIndex;
+    int eof;
 } Tokeniser;
+
+static void skipComment(Tokeniser* t)
+{
+    const char* p;
+    for (p = 0; *p != 0 && *p != '\n'; p++) {
+
+    }
+    // The cursor is now either pointing at the trailing zero, or at the
+    // newline (which will get skipped as whitespace).
+    t->cursor = p;
+}
 
 static void skipSpace(Tokeniser* t)
 {
-    while (isspace(*t->cursor)) {
-        t->cursor++;
+    while (1) {
+        char c = *t->cursor;
+        if (c == ';') {
+            skipComment(t);
+        }
+        else if (isspace(c)) {
+            t->cursor++;
+        }
+        else {
+            return;
+        }
+    }
+}
+
+static int isdelim(char c)
+{
+    switch (c) {
+    case '(': case ')': case '\'': case '"':
+        return 1;
+
+    default:
+        return 0;
     }
 }
 
@@ -30,16 +60,58 @@ static int strEq(const char* s, const char* t)
 
 static int tokeniser_eof(Tokeniser* t)
 {
-    return t->token == NULL;
+    return t->eof;
 }
 
-static char* strDup(const char* begin, const char* end)
+typedef void (CharSink)(char c, void* context);
+static const char* stringEscape(const char* s, CharSink* emit, void* context)
 {
-    int length = end - begin;
-    char* dup = malloc(length+1);
-    memcpy(dup, begin, length);
-    dup[length] = 0;
-    return dup;
+    for (const char* p = s; ; p++) {
+        char c = *p;
+        switch (*p) {
+        case 0:
+        case '"':
+            // Return p still pointing to the last char, so the caller can
+            // decide what to do.
+            return p;
+
+        case '\\':
+            p++;
+            switch (c = *p) {
+                case 'n':   emit('\n', context); break;
+                case 't':   emit('\t', context); break;
+                case '\\':  emit('\\', context); break;
+                default:    emit(c,    context); break;
+            }
+            break;
+
+        default:
+            emit(c, context);
+            break;
+        }
+    }
+}
+
+static void countChars(char c, void* context)
+{
+    int* count = (void*) context;
+    count++;
+}
+
+static void copyChars(char c, void* context)
+{
+    char** dest = (char**) context;
+    **dest = c;
+    (*dest)++;
+}
+
+static Pointer makeToken(const char* start, int length)
+{
+    Pointer ptr = symbol_alloc(length);
+    char* dest = (char*) symbol_get(ptr);
+    memcpy(dest, start, length);
+    dest[length] = 0;
+    return ptr;
 }
 
 static void tokeniser_advance(Tokeniser* t)
@@ -48,10 +120,7 @@ static void tokeniser_advance(Tokeniser* t)
 
     skipSpace(t);
     if (*t->cursor == 0) {
-        if (t->token != NULL) {
-            free(t->token);
-        }
-        t->token = NULL;
+        t->eof = 1;
         return;
     }
 
@@ -59,77 +128,71 @@ static void tokeniser_advance(Tokeniser* t)
     for (int i = 0; punctChars[i] != 0; i++) {
         if (*t->cursor == punctChars[i]) {
             t->cursor++;
-            t->token = strDup(punctChars + i, punctChars + i + 1);
+            SET(t->tokenIndex, makeToken(&punctChars[i], 1));
             return;
         }
     }
 
-    const char* ret = t->cursor;
     if (*t->cursor == '"') {
-        // Scan out a string.
-        t->cursor++;
-        for (char* wp = ++t->cursor; *t->cursor != 0; t->cursor++) {
-            switch (*t->cursor) {
-            case '"':
-                // Clobber the closing "
-                t->token = strDup(ret, wp);
-                t->cursor++;
-                return;
 
-            case '\\':
-                t->cursor++;
-                switch (*t->cursor) {
-                    case 0:     THROW("Expected \", got EOF");
-                    case 'n':   *wp++ = '\n'; break;
-                    case 't':   *wp++ = '\t'; break;
-                    case '\\':  *wp++ = '\\'; break;
-                    default:    *wp++ = *t->cursor; break;
-                }
-                break;
-
-            default:
-                *wp++ = *t->cursor;
-                break;
-            }
+        // Find out how long the escaped string is, and check it was terminated
+        // properly.
+        int length = 0;
+        t->cursor++; // advance past the initial "
+        const char* end = stringEscape(t->cursor, countChars, &length);
+        if (*end != '"') {
+            THROW("Expected \", got EOF");
         }
-        THROW("Expected \", got EOF");
+
+        // Now allocate a string and copy it in.
+        Pointer ptr = string_alloc(length);
+        char* dest = (char*) string_get(ptr);
+        stringEscape(t->cursor, copyChars, &dest);
+
+        // Advance the cursor past the string.
+        t->cursor = end + 1;
+
+        SET(t->tokenIndex, ptr);
+        return;
     }
     else {
         // Scan out a token
-        for (t->cursor++; *t->cursor != 0; t->cursor++) {
-            if (isspace(*t->cursor)) {
-                t->token = strDup(ret, t->cursor++);
+        const char* start = t->cursor;
+        while (1) {
+            char c = *t->cursor;
+            if ((c == 0) || isspace(c) || isdelim(c)) {
+                int length = t->cursor - start;
+                SET(t->tokenIndex, makeToken(start, length));
                 return;
             }
-            switch (*t->cursor) {
-            case '(': case ')': case '\'': case ' ': case '\t':
-                t->token = strDup(ret, t->cursor);
-                return;
-            }
+            // Advance the cursor now, not earlier.
+            t->cursor++;
         }
     }
-    return;
 }
 
-static const char* tokeniser_peek(Tokeniser* t)
+static void tokeniser_next(Tokeniser* t)
 {
-    ASSERT(!tokeniser_eof(t), "peek() on empty tokeniser");
-    return t->token;
-}
-
-static const char* tokeniser_next(Tokeniser* t)
-{
-    ASSERT(!tokeniser_eof(t), "next() on empty tokeniser");
-    const char* token = t->token;
     tokeniser_advance(t);
-    return token;
 }
 
-static void tokeniser_init(Tokeniser* t, char* input)
+static void tokeniser_init(Tokeniser* t, const char* input)
 {
-    t->cursor = input;
-    t->token  = input;
+    t->cursor     = input;
+    t->eof        = 0;
+    t->tokenIndex = RESERVE();
+
     tokeniser_advance(t);
+}
+
+static Pointer tokeniser_token(Tokeniser* t)
+{
+    return GET(t->tokenIndex);
+}
+
+static void tokeniser_deinit(Tokeniser* t)
+{
+    DROP(1);
 }
 
 static int readInteger(const char* t, int* value)
@@ -164,8 +227,8 @@ static Pointer readList(Tokeniser* t)
         THROW("Expected ), got EOF");
     }
 
-    const char* token = tokeniser_peek(t);
-    if (strEq(token, ")")) {
+    Pointer token = tokeniser_token(t);
+    if ((token.type == Type_symbol) && strEq(symbol_get(token), ")")) {
         tokeniser_next(t);
         return nil_make();
     }
@@ -186,33 +249,45 @@ static Pointer readForm(Tokeniser* t)
         return nil_make();
     }
 
-    const char* token = tokeniser_next(t);
+    Pointer ret = tokeniser_token(t);
 
-    if (strEq(token, "(")) {
-        return readList(t);
+    // If ret is a string, it's ready to return
+    if (ret.type == Type_symbol) {
+        const char* token = symbol_get(ret);
+
+        int intValue;
+        if (strEq(token, "(")) {
+            tokeniser_next(t);  // consume the '(', read the list and
+            return readList(t); // return immediately to avoid hitting the
+                                // tokeniser_next() below
+        }
+        else if (strEq(token, "nil")) {
+            ret = nil_make();
+        }
+        else if (strEq(token, "true")) {
+            ret = boolean_make(1);
+        }
+        else if (strEq(token, "false")) {
+            ret = boolean_make(0);
+        }
+        else if (readInteger(token, &intValue)) {
+            ret = integer_make(intValue);
+        }
+        else {
+            // Build a new symbol from the string, so it gets inserted into
+            // the symbol table.
+            ret = symbol_make(token);
+        }
     }
-    if (token[0] == '"') {
-        return string_make(token + 1); // strip the leading quote
-    }
-    if (strEq(token, "nil")) {
-        return nil_make();
-    }
-    if (strEq(token, "true")) {
-        return boolean_make(1);
-    }
-    if (strEq(token, "false")) {
-        return boolean_make(0);
-    }
-    int intValue;
-    if (readInteger(token, &intValue)) {
-        return integer_make(intValue);
-    }
-    return symbol_make(token);
+
+    tokeniser_next(t);
+    return ret;
 }
 
-Pointer readLine(char* input)
+Pointer readLine(const char* input)
 {
     Tokeniser t;
     tokeniser_init(&t, input);
-    return readForm(&t);
+    Pointer ptr = readForm(&t); tokeniser_deinit(&t);
+    return ptr;
 }

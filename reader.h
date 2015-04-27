@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-extern Pointer readLine(char* input);
+extern Pointer readLine(const char* input);
 
 #endif // INCLUDE_READER_H
