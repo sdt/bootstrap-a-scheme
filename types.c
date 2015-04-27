@@ -105,7 +105,9 @@ static Value_base* allocateValue(int size)
         if (base == NULL) {
             valuestack_dump();
         }
-        ASSERT(base != NULL, "Out of memory");
+        ASSERT(base != NULL,
+            "Out of memory allocating %d bytes: %d bytes used, %d bytes free",
+                size, allocator_bytesUsed(), allocator_bytesAvailable());
     }
     base->relocated = nil;
     return base;

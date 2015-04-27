@@ -40,3 +40,13 @@ void symtab_add(StackIndex symIndex)
 
     SET(symtab.index, pair_make(symIndex, symtab.index));
 }
+
+Pointer symtab_insert(Pointer symbol)
+{
+    Pointer ret = symtab_find(symbol_get(symbol));
+    if (ret.type == Type_nil) {
+        symtab_add(PUSH(symbol));
+        ret = POP();
+    }
+    return ret;
+}

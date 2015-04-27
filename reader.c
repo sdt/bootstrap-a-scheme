@@ -2,6 +2,7 @@
 
 #include "debug.h"
 #include "exception.h"
+#include "symtab.h"
 #include "types.h"
 #include "valuestack.h"
 
@@ -117,6 +118,7 @@ static Pointer makeToken(const char* start, int length)
 static void tokeniser_advance(Tokeniser* t)
 {
     ASSERT(!tokeniser_eof(t), "next() on empty tokeniser");
+    SET(t->tokenIndex, nil_make());
 
     skipSpace(t);
     if (*t->cursor == 0) {
@@ -148,12 +150,12 @@ static void tokeniser_advance(Tokeniser* t)
         Pointer ptr = string_alloc(length);
         char* dest = (char*) string_get(ptr);
         stringEscape(t->cursor, copyChars, &dest);
+        dest[length] = 0;
 
         // Advance the cursor past the string.
         t->cursor = end + 1;
 
         SET(t->tokenIndex, ptr);
-        return;
     }
     else {
         // Scan out a token
@@ -163,7 +165,7 @@ static void tokeniser_advance(Tokeniser* t)
             if ((c == 0) || isspace(c) || isdelim(c)) {
                 int length = t->cursor - start;
                 SET(t->tokenIndex, makeToken(start, length));
-                return;
+                break;
             }
             // Advance the cursor now, not earlier.
             t->cursor++;
@@ -274,14 +276,15 @@ static Pointer readForm(Tokeniser* t)
             ret = integer_make(intValue);
         }
         else {
-            // Build a new symbol from the string, so it gets inserted into
-            // the symbol table.
-            ret = symbol_make(token);
+            // Insert the symbol into the symbol table. We may or may not get
+            // the same symbol back.
+            ret = symtab_insert(ret);
         }
     }
 
+    PUSH(ret);
     tokeniser_next(t);
-    return ret;
+    return POP();
 }
 
 Pointer readLine(const char* input)

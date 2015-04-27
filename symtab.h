@@ -3,8 +3,9 @@
 
 #include "valuestack.h"
 
-void symtab_init();
-Pointer symtab_find(const char* s);
-void symtab_add(StackIndex index);
+extern void     symtab_init();
+extern void     symtab_add(StackIndex index);
+extern Pointer  symtab_find(const char* s);
+extern Pointer  symtab_insert(Pointer symbol);
 
 #endif // INCLUDE_SYMTAB_H
