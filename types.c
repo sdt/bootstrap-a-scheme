@@ -14,10 +14,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ALLOC(type)             ((type*)allocateValue(sizeof(type)))
+#define ALLOC(type) \
+    ((Value_##type*)allocateValue(sizeof(Value_##type), Type_##type))
 #define DEREF(ptr, type)        ((Value_##type*)getValue(ptr, Type_##type))
 
 typedef struct {
+    // When the object is in the active heap, relocated points to the object.
+    // When the object is in the inactive heap, relocated points to the new
+    // object.
+    // During GC, if this pointer refers to the active heap, the object has
+    // already been moved. If it points to the inactive heap, it needs to be
+    // moved.
     Pointer relocated;
 } Value_base;
 
@@ -96,7 +103,7 @@ static Pointer makePointer(Type type, byte* raw)
     return ptr;
 }
 
-static Value_base* allocateValue(int size)
+static Value_base* allocateValue(int size, Type type)
 {
 #if DEBUG_GC_EVERY_ALLOC
     gc_run();
@@ -112,14 +119,20 @@ static Value_base* allocateValue(int size)
             "Out of memory allocating %d bytes: %d bytes used, %d bytes free",
                 size, allocator_bytesUsed(), allocator_bytesAvailable());
     }
-    base->relocated = nil;
+    base->relocated = makePointer(type, (byte*) base);
     return base;
 }
 
 static Value_base* getValue(Pointer ptr, Type type)
 {
+    // Check that the pointer passed is of the expected type.
     type_assert(ptr, type);
-    return (Value_base*) allocator_getPointer(ptr.offset);
+    Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
+
+    // Check that value pointed to is also of the expected type.
+    // Something's desperately wrong if this fails.
+    type_assert(base->relocated, type);
+    return base;
 }
 
 Pointer boolean_make(int value)
@@ -147,7 +160,7 @@ Pointer builtin_apply(Pointer ptr, StackIndex argsIndex, StackIndex envIndex)
 
 Pointer integer_make(int value)
 {
-    Value_integer* raw = ALLOC(Value_integer);
+    Value_integer* raw = ALLOC(integer);
     raw->value = value;
 
     return makePointer(Type_integer, (byte*) raw);
@@ -191,7 +204,7 @@ Pointer lambda_prepareEnv(StackIndex lambdaIndex, StackIndex argsIndex)
 Pointer lambda_make(StackIndex paramsIndex, StackIndex bodyIndex,
                     StackIndex envIndex)
 {
-    Value_lambda* raw = ALLOC(Value_lambda);
+    Value_lambda* raw = ALLOC(lambda);
 
     raw->params = GET(paramsIndex);
     raw->body   = GET(bodyIndex);
@@ -233,7 +246,7 @@ Pointer nil_make()
 
 Pointer pair_make(StackIndex carIndex, StackIndex cdrIndex)
 {
-    Value_pair* raw = ALLOC(Value_pair);
+    Value_pair* raw = ALLOC(pair);
 
     raw->value[0] = GET(carIndex);
     raw->value[1] = GET(cdrIndex);
@@ -258,7 +271,7 @@ void pair_set(Pointer ptr, int index, Pointer value)
 static Pointer cstring_alloc(int length, Type type)
 {
     int totalSize = sizeof(Value_cstring) + length;
-    return makePointer(type, (byte*) allocateValue(totalSize));
+    return makePointer(type, (byte*) allocateValue(totalSize, type));
 }
 
 static const char* cstring_get(Pointer ptr, Type type)
@@ -320,7 +333,7 @@ Pointer pointer_copy(Pointer ptr)
     }
 
     Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
-    if (base->relocated.type == Type_nil) {
+    if (!allocator_isOffsetActive(base->relocated.offset)) {
         switch (ptr.type) {
             case Type_integer: {
                 Value_integer* old = DEREF(ptr, integer);
@@ -329,7 +342,7 @@ Pointer pointer_copy(Pointer ptr)
             }
             case Type_lambda: {
                 Value_lambda* old = DEREF(ptr, lambda);
-                Value_lambda* new = ALLOC(Value_lambda);
+                Value_lambda* new = ALLOC(lambda);
                 base->relocated = makePointer(Type_lambda, (byte*) new);
 
                 new->params = pointer_copy(old->params);
@@ -339,7 +352,7 @@ Pointer pointer_copy(Pointer ptr)
             }
             case Type_pair: {
                 Value_pair* old = DEREF(ptr, pair);
-                Value_pair* new = ALLOC(Value_pair);
+                Value_pair* new = ALLOC(pair);
                 base->relocated = makePointer(Type_pair, (byte*) new);
 
                 for (int i = 0; i < 2; i++) {

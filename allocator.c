@@ -67,6 +67,13 @@ byte* allocator_getPointer(unsigned offset)
     return allocator.heap[0] + (offset << ALIGNMENT_BITS);
 }
 
+int allocator_isOffsetActive(unsigned offset)
+{
+    offset <<= ALIGNMENT_BITS;
+    offset -= allocator.heapSize * allocator.activeHeap;
+    return offset < allocator.heapSize;
+}
+
 int allocator_bytesAvailable()
 {
     return allocator.heapSize - allocator.bytesUsed;

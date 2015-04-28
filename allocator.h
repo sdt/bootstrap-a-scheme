@@ -11,5 +11,6 @@ extern int          allocator_bytesAvailable();
 extern int          allocator_bytesUsed();
 extern unsigned     allocator_getOffset(byte* pointer);
 extern byte*        allocator_getPointer(unsigned offset);
+extern int          allocator_isOffsetActive(unsigned offset);
 
 #endif // INCLUDE_ALLOCATOR_H
