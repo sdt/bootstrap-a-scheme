@@ -10,16 +10,22 @@ endif
 SOURCES=$(wildcard *.c)
 OBJECTS=$(SOURCES:%.c=%.o)
 
-CCFLAGS=-Wall $(INCPATHS)
-LDFLAGS=-ggdb $(LIBPATHS) -lreadline -lhistory
+CCFLAGS=-Wall -g $(INCPATHS)
+LDFLAGS=-g $(LIBPATHS) -lreadline -lhistory
 
-.PHONY:	all clean test
+# Optional debug flags
+# CCFLAGS+=-DDEBUG_WIPE_HEAP		# wipe new heap before gc starts
+# CCFLAGS+=-DDEBUG_GC_EVERY_ALLOC	# run a gc before *every* allocation
+
+.PHONY:	all clean test depend
 
 .SUFFIXES: .c .o
 
-all: bas deps
+all: .deps bas
 
-deps: *.c *.h
+depend: .deps
+
+.deps: *.c *.h Makefile
 	$(CC) $(CCFLAGS) -MM *.c > .deps
 
 bas: $(OBJECTS)
