@@ -81,13 +81,6 @@ Pointer valuestack_set(StackIndex index, Pointer ptr)
     return ptr;
 }
 
-void valuestack_swapHeaps()
-{
-    for (StackIndex index = 0; index < vs.top; index++) {
-        vs.slot[index] = pointer_copy(vs.slot[index]);
-    }
-}
-
 StackIndex valuestack_top()
 {
     return vs.top;

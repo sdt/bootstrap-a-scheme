@@ -326,57 +326,6 @@ Pointer symbol_make(const char* s)
     return ptr;
 }
 
-Pointer pointer_copy(Pointer ptr)
-{
-    if (!type_isObject(ptr.type)) {
-        return ptr;
-    }
-
-    Value_base* base = (Value_base*) allocator_getPointer(ptr.offset);
-    if (!allocator_isOffsetActive(base->relocated.offset)) {
-        switch (ptr.type) {
-            case Type_integer: {
-                Value_integer* old = DEREF(ptr, integer);
-                base->relocated = integer_make(old->value);
-                break;
-            }
-            case Type_lambda: {
-                Value_lambda* old = DEREF(ptr, lambda);
-                Value_lambda* new = ALLOC(lambda);
-                base->relocated = makePointer(Type_lambda, (byte*) new);
-
-                new->params = pointer_copy(old->params);
-                new->body   = pointer_copy(old->body);
-                new->env    = pointer_copy(old->env);
-                break;
-            }
-            case Type_pair: {
-                Value_pair* old = DEREF(ptr, pair);
-                Value_pair* new = ALLOC(pair);
-                base->relocated = makePointer(Type_pair, (byte*) new);
-
-                for (int i = 0; i < 2; i++) {
-                    new->value[i] = pointer_copy(old->value[i]);
-                }
-                break;
-            }
-            case Type_string:
-            case Type_symbol: {
-                // Handle these both as the underlying cstrings.
-                Value_cstring* old =
-                    (Value_cstring*) allocator_getPointer(ptr.offset);
-                base->relocated = cstring_make(old->value, ptr.type);
-                break;
-            }
-            default: {
-                ASSERT(0, "Unexpected %s value", type_name(ptr.type));
-                break;
-            }
-        }
-    }
-    return base->relocated;
-}
-
 Pointer pointer_move(Pointer oldPtr)
 {
     // Pointer-only objects never need to be moved.

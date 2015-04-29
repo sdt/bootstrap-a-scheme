@@ -9,12 +9,6 @@
 // Use this to prevent re-entering the GC when DEBUG_GC_EVERY_ALLOC is active
 int in_gc = 0;
 
-void gc_run_recursive()
-{
-    allocator_swapHeaps();
-    valuestack_swapHeaps();
-}
-
 static Pointer moveObject(Pointer ptr)
 {
     if (!type_isObject(ptr.type)) {
@@ -31,7 +25,7 @@ static Pointer moveObject(Pointer ptr)
     return ret;
 }
 
-void gc_run_two_fingers()
+static void gc_run_two_fingers()
 {
     allocator_swapHeaps();
 
@@ -52,7 +46,6 @@ void gc_run()
 
     int before = allocator_bytesAvailable();
 
-    //gc_run_recursive();
     gc_run_two_fingers();
 
     int after = allocator_bytesAvailable();

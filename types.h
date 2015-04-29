@@ -67,7 +67,6 @@ extern const char*  symbol_get(Pointer ptr);
 
 extern int          pointer_isFalse(Pointer ptr);
 extern int          pointer_isTrue(Pointer ptr);
-extern Pointer      pointer_copy(Pointer ptr);
 extern Pointer      pointer_move(Pointer ptr);
 
 extern int          type_isObject(Type type);
