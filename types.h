@@ -49,6 +49,7 @@ extern Pointer      lambda_getBody(Pointer ptr);
 extern Pointer      lambda_getParams(Pointer ptr);
 extern Pointer      lambda_getEnv(Pointer ptr);
 
+extern int          list_length(Pointer ptr);
 extern Pointer      list_nth(Pointer ptr, int n);
 
 extern Pointer      nil_make();

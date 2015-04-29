@@ -55,16 +55,12 @@ bas_is('((lambda () 2))',               2);
 my $fac = '(define fac (lambda (n) (if (= n 0) 1 (* n (fac (+ n -1))))))';
 bas_like("$fac\n(fac 6)", qr/\n720/m);
 
-TODO: {
-    local $TODO = 'Need to check arity on lambda calls';
-
-    bas_is('((lambda () 1) 1)',         '0 args expected, 1 provided');
-    bas_is('((lambda () 1) 1 2)',       '0 args expected, 2 provided');
-    bas_is('((lambda (b) a))',          '1 arg expected, 0 provided');
-    bas_is('((lambda (a) a) 1 2 3)',    '1 arg expected, 3 provided');
-    bas_is('((lambda (a b) a) 1 2 3)',  '2 args expected, 3 provided');
-    bas_is('((lambda (a b) a))',        '2 args expected, 0 provided');
-    bas_is('((lambda (a b) a) 1)',      '2 args expected, 1 provided');
-}
+bas_is('((lambda () 1) 1)',         'lambda: 0 args expected, 1 provided');
+bas_is('((lambda () 1) 1 2)',       'lambda: 0 args expected, 2 provided');
+bas_is('((lambda (b) a))',          'lambda: 1 arg expected, 0 provided');
+bas_is('((lambda (a) a) 1 2 3)',    'lambda: 1 arg expected, 3 provided');
+bas_is('((lambda (a b) a) 1 2 3)',  'lambda: 2 args expected, 3 provided');
+bas_is('((lambda (a b) a))',        'lambda: 2 args expected, 0 provided');
+bas_is('((lambda (a b) a) 1)',      'lambda: 2 args expected, 1 provided');
 
 done_testing();

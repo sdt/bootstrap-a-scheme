@@ -1,6 +1,7 @@
 #include "types.h"
 
 #include "allocator.h"
+#include "args.h"
 #include "core.h"
 #include "debug.h"
 #include "environment.h"
@@ -181,6 +182,8 @@ Pointer lambda_prepareEnv(StackIndex lambdaIndex, StackIndex argsIndex)
     StackIndex innerIndex  = PUSH(env_make(envIndex));
 
     if (type_isList(GET(paramsIndex).type)) {
+        args_checkCount("lambda", list_length(GET(paramsIndex)),
+                                  list_length(GET(argsIndex)));
         while (GET(paramsIndex).type == Type_pair) {
             StackIndex keyIndex = PUSH(PAIR_GET(paramsIndex, 0));
             StackIndex valIndex = PUSH(PAIR_GET(argsIndex, 0));
@@ -229,6 +232,16 @@ Pointer lambda_getParams(Pointer ptr)
 {
     Value_lambda* raw = DEREF(ptr, lambda);
     return raw->params;
+}
+
+int list_length(Pointer ptr)
+{
+    int size = 0;
+    while (ptr.type == Type_pair) {
+        ptr = pair_get(ptr, 1);
+        size++;
+    }
+    return size;
 }
 
 Pointer list_nth(Pointer ptr, int n)

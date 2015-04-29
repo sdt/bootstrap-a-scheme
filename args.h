@@ -6,6 +6,7 @@
 extern int        args_count(Pointer args);
 extern StackIndex args_extract(const char* caller, Pointer args,
                                int min, int max);
+extern int        args_checkCount(const char* caller, int expected, int got);
 extern Pointer    args_checkType(const char* caller, const char* argName,
                                  Pointer argPtr, Type expected);
 
