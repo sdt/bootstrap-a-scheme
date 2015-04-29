@@ -62,6 +62,13 @@ unsigned allocator_getOffset(byte* pointer)
     return (pointer - allocator.heap[0]) >> ALIGNMENT_BITS;
 }
 
+int allocator_isOffsetAtEnd(unsigned offset)
+{
+    offset <<= ALIGNMENT_BITS;
+    offset -= allocator.heapSize * allocator.activeHeap;
+    return offset >= allocator.bytesUsed;
+}
+
 byte* allocator_getPointer(unsigned offset)
 {
     return allocator.heap[0] + (offset << ALIGNMENT_BITS);
@@ -94,3 +101,7 @@ void allocator_dumpInfo(FILE* fh)
         allocator.bytesUsed);
 }
 
+int allocator_roundUp(int size)
+{
+    return ALIGN(size);
+}

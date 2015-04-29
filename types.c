@@ -377,8 +377,116 @@ Pointer pointer_copy(Pointer ptr)
     return base->relocated;
 }
 
-void value_print(Pointer ptr);
-void list_print(Pointer ptr)
+Pointer pointer_move(Pointer oldPtr)
+{
+    // Pointer-only objects never need to be moved.
+    if (!type_isObject(oldPtr.type)) {
+        return oldPtr;
+    }
+
+    // Is the offset is active, this is an already-moved pointer.
+    // I need to think about what causes this to happen.
+    if (allocator_isOffsetActive(oldPtr.offset)) {
+        return oldPtr;
+    }
+
+    // Objects in the old heap will point to themselves if they haven't been
+    // moved, or to the new heap if they have been moved.
+    Value_base* oldBase = getValue(oldPtr, oldPtr.type);
+    if (oldBase->relocated.offset != oldPtr.offset) {
+        return oldBase->relocated;
+    }
+
+    // Copy the old object to the new heap and return the new pointer.
+    // Don't fix up any of the value's internal pointers, just relocated.
+    // The internal pointers will get fixed up later.
+    int size = value_size(oldPtr);
+    Value_base* newBase = allocateValue(size, oldPtr.type);
+
+    // allocateValue will have already set up the Value_base struct, we need
+    // to copy the rest of the data across.
+    memcpy(newBase + 1, oldBase + 1, size - sizeof(Value_base));
+
+    // Finally, set the relocated pointer on the old object to point to the new.
+    oldBase->relocated = newBase->relocated;
+
+    return newBase->relocated;
+}
+
+unsigned value_fixup(unsigned offset)
+{
+    Value_base* base = (Value_base*) allocator_getPointer(offset);
+    Type type = base->relocated.type;
+
+    switch (type) {
+        case Type_pair: {
+            Value_pair* pair = (Value_pair*) base;
+            for (int i = 0; i < 2; i++) {
+                pair->value[i] = pointer_move(pair->value[i]);
+            }
+        }
+        break;
+
+        case Type_lambda: {
+            Value_lambda* pair = (Value_lambda*) base;
+            pair->params = pointer_move(pair->params);
+            pair->body   = pointer_move(pair->body);
+            pair->env    = pointer_move(pair->env);
+        }
+        break;
+
+        case Type_integer:
+        case Type_string:
+        case Type_symbol:
+            // Lets be explicit here so we can catch any screwups.
+            break;
+
+        default:
+            ASSERT(0, "Unexpected %s value", type_name(type));
+            break;
+    }
+
+    return allocator_getOffset(((byte*) base) + value_size(base->relocated));
+}
+
+
+int value_size(Pointer ptr)
+{
+    if (!type_isObject(ptr.type)) {
+        return 0;
+    }
+
+    int rawSize = 0;
+    switch (ptr.type) {
+        case Type_integer:
+            rawSize = sizeof(Value_integer);
+            break;
+
+        case Type_lambda:
+            rawSize = sizeof(Value_lambda);
+            break;
+
+        case Type_pair:
+            rawSize = sizeof(Value_pair);
+            break;
+
+        case Type_string:
+        case Type_symbol:
+            // The zero terminator is included in the struct, so we only need
+            // to count the string length.
+            rawSize = sizeof(Value_cstring)
+                    + strlen(cstring_get(ptr, ptr.type));
+            break;
+
+        default:
+            ASSERT(0, "Unexpected %s value", type_name(ptr.type));
+            break;
+    }
+    return allocator_roundUp(rawSize);
+}
+
+static void value_print(Pointer ptr);
+static void list_print(Pointer ptr)
 {
     while (1) {
         // Three cases:
@@ -405,7 +513,7 @@ void list_print(Pointer ptr)
     }
 }
 
-void value_print(Pointer ptr)
+static void value_print(Pointer ptr)
 {
     switch (ptr.type) {
         case Type_nil: {

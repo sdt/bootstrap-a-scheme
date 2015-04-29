@@ -7,4 +7,14 @@
 extern void assert_verbose(int condition, const char* file, int line,
                            const char* fmt, ...);
 
+#ifdef DEBUG_NO_TRACE
+
+    #define TRACE(...)  do { } while (0)
+
+#else
+
+    #define TRACE(...) fprintf(stderr, __VA_ARGS__)
+
+#endif
+
 #endif // INCLUDE_DEBUG_H
