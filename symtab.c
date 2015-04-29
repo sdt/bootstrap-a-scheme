@@ -1,9 +1,8 @@
 #include "symtab.h"
 
 #include "types.h"
+#include "util.h"
 #include "valuestack.h"
-
-#include <string.h>
 
 typedef struct {
     StackIndex index;
@@ -24,7 +23,7 @@ Pointer symtab_find(const char* s)
          ptr = pair_get(ptr, 1)) {
 
         Pointer sym = pair_get(ptr, 0);
-        if (strcmp(s, symbol_get(sym)) == 0) {
+        if (util_streq(s, symbol_get(sym))) {
             return sym;
         }
     }

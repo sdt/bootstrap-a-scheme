@@ -4,6 +4,7 @@
 #include "exception.h"
 #include "symtab.h"
 #include "types.h"
+#include "util.h"
 #include "valuestack.h"
 
 #include <ctype.h>
@@ -52,11 +53,6 @@ static int isdelim(char c)
     default:
         return 0;
     }
-}
-
-static int strEq(const char* s, const char* t)
-{
-    return strcmp(s, t) == 0;
 }
 
 static int tokeniser_eof(Tokeniser* t)
@@ -230,7 +226,7 @@ static Pointer readList(Tokeniser* t)
     }
 
     Pointer token = tokeniser_token(t);
-    if ((token.type == Type_symbol) && strEq(symbol_get(token), ")")) {
+    if ((token.type == Type_symbol) && util_streq(symbol_get(token), ")")) {
         tokeniser_next(t);
         return nil_make();
     }
@@ -258,18 +254,18 @@ static Pointer readForm(Tokeniser* t)
         const char* token = symbol_get(ret);
 
         int intValue;
-        if (strEq(token, "(")) {
+        if (util_streq(token, "(")) {
             tokeniser_next(t);  // consume the '(', read the list and
             return readList(t); // return immediately to avoid hitting the
                                 // tokeniser_next() below
         }
-        else if (strEq(token, "nil")) {
+        else if (util_streq(token, "nil")) {
             ret = nil_make();
         }
-        else if (strEq(token, "true")) {
+        else if (util_streq(token, "true")) {
             ret = boolean_make(1);
         }
-        else if (strEq(token, "false")) {
+        else if (util_streq(token, "false")) {
             ret = boolean_make(0);
         }
         else if (readInteger(token, &intValue)) {
