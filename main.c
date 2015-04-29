@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
         valuestack_drop(2);
     }
 
+    allocator_deinit();
     return 0;
 }
 
