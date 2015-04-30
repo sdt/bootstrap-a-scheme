@@ -198,3 +198,14 @@ HANDLER(vectorGet)
 
     DROP_RET(vector_get(GET(ARG_INDEX(0)), integer_get(GET(ARG_INDEX(1)))));
 }
+
+HANDLER(vectorSet)
+{
+    GET_ARGS_EXACTLY(3);
+    ARG_CHECKTYPE(0, vector,  "arg 1");
+    ARG_CHECKTYPE(1, integer, "arg 2");
+
+    DROP_RET(vector_set(GET(ARG_INDEX(0)),
+                        integer_get(GET(ARG_INDEX(1))),
+                        GET(ARG_INDEX(2))));
+}

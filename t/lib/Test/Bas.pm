@@ -46,7 +46,7 @@ fun bas_is($input, $expected, $message = "$input ==> \"$expected\"") {
 fun bas_ends($input, $expected, $message = "$input ==> \"$expected\"") {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     my $got = bas_run($input);
-    $got =~ s/^.*\n//g; # strip all but the last line
+    $got =~ s/^.*\n//gm; # strip all but the last line
     $message =~ s/\n/\\n/gm;
     is($got, $expected, $message);
 }

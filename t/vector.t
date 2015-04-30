@@ -1,7 +1,8 @@
 use Test::Bas;
 
-my $v  = 'vector'; # make these tests a bit less verbose
+my $v  = 'vector';      # just some abbreviations
 my $vg = 'vector-get';
+my $vs = 'vector-set';
 
 note 'Constructor'; {
     my @ids = (
@@ -34,10 +35,27 @@ note 'Bad lookups'; {
 
     bas_is("($vg $vec -2)", "Index -2 out of range [0..3)");
     bas_is("($vg $vec -1)", "Index -1 out of range [0..3)");
-    bas_is("($vg $vec 3)",  "Index 3 out of range [0..3)");
-    bas_is("($vg $vec 4)",  "Index 4 out of range [0..3)");
+    bas_is("($vg $vec  3)", "Index 3 out of range [0..3)");
+    bas_is("($vg $vec  4)", "Index 4 out of range [0..3)");
+    bas_is("($vg ($v)  0)", "Index 0 out of range [0..0)");
+}
 
-    bas_is("($vg ($v) 0)", "Index 0 out of range [0..0)");
+note 'Good sets'; {
+    my $vec = "($v 1 2 ($v 3 4) 5 ($v ($v 6) 7))";
+
+    bas_is("($vs $vec 0 3)", 3);
+    bas_ends("(define v $vec)\n($vs v 0 3)\n($vg v 0)", 3);
+}
+
+note 'Bad sets'; {
+    my $vec = "($v 1 2 3)";
+
+    bas_is("($vs $vec -2 5)", "Index -2 out of range [0..3)");
+    bas_is("($vs $vec -1 5)", "Index -1 out of range [0..3)");
+    bas_is("($vs $vec  3 5)", "Index 3 out of range [0..3)");
+    bas_is("($vs $vec  4 5)", "Index 4 out of range [0..3)");
+
+    bas_is("($vs ($v)  0 5)", "Index 0 out of range [0..0)");
 }
 
 done_testing();

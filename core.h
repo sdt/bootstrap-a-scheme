@@ -12,6 +12,7 @@
     X("*gc*",       gc)             \
     X("vector",     vector)         \
     X("vector-get", vectorGet)      \
+    X("vector-set", vectorSet)      \
     X("+",          add)            \
     X("-",          sub)            \
     X("<",          lt)             \
