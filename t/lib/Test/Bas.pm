@@ -11,7 +11,7 @@ use Path::Class qw( );
 use Test::FailWarnings;
 use Test::Most;
 
-our @EXPORT = qw( bas_is bas_like bas_run );
+our @EXPORT = qw( bas_is bas_ends bas_like bas_run );
 
 sub import {
     shift->export_to_level(1);
@@ -39,6 +39,14 @@ fun bas_run($input) {
 fun bas_is($input, $expected, $message = "$input ==> \"$expected\"") {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     my $got = bas_run($input);
+    $message =~ s/\n/\\n/gm;
+    is($got, $expected, $message);
+}
+
+fun bas_ends($input, $expected, $message = "$input ==> \"$expected\"") {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    my $got = bas_run($input);
+    $got =~ s/^.*\n//g; # strip all but the last line
     $message =~ s/\n/\\n/gm;
     is($got, $expected, $message);
 }

@@ -189,3 +189,12 @@ HANDLER(vector)
 
     return vec;
 }
+
+HANDLER(vectorGet)
+{
+    GET_ARGS_EXACTLY(2);
+    ARG_CHECKTYPE(0, vector,  "arg 1");
+    ARG_CHECKTYPE(1, integer, "arg 2");
+
+    DROP_RET(vector_get(GET(ARG_INDEX(0)), integer_get(GET(ARG_INDEX(1)))));
+}

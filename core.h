@@ -11,6 +11,7 @@
     X("empty?",     isEmpty)        \
     X("*gc*",       gc)             \
     X("vector",     vector)         \
+    X("vector-get", vectorGet)      \
     X("+",          add)            \
     X("-",          sub)            \
     X("<",          lt)             \
