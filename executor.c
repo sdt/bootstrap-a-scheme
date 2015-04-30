@@ -30,8 +30,15 @@ Pointer executor_executeHandler(ExecuteHandlerId handlerId,
     ASSERT(handlerId < ExecuteHandler_COUNT,
             "Handler ID %d out of range", handlerId);
 
+    StackIndex oldTop = valuestack_top();
+
     ExecuteHandler* handler = handlerTable[handlerId];
-    return handler(valueIndex, envIndex);
+    Pointer ret = handler(valueIndex, envIndex);
+
+    StackIndex newTop = valuestack_top();
+    ASSERT(oldTop == newTop, "Value stack out of whack %d! Was %d, is %d",
+            handlerId, oldTop, newTop);
+    return ret;
 }
 
 static Pointer map_execute(StackIndex pairIndex, StackIndex envIndex)
@@ -71,11 +78,13 @@ HANDLER(apply)
             ret = builtin_apply(GET(opIndex), argsIndex, envIndex);
             break;
 
-        case Type_lambda:
-            SET(envIndex, lambda_prepareEnv(opIndex, argsIndex));
+        case Type_lambda: {
+            StackIndex innerIndex = PUSH(lambda_prepareEnv(opIndex, argsIndex));
             Pointer body = lambda_getBody(GET(opIndex));
-            ret = executor_execute(body, envIndex);
+            ret = executor_execute(body, innerIndex);
+            POP();
             break;
+        }
 
         default:
             THROW("%s is not applicable", type_name(GET(opIndex).type));

@@ -187,6 +187,8 @@ HANDLER(vector)
         vector_set(vec, i, GET(ARG_INDEX(i)));
     }
 
+    DROP_ARGS();
+
     return vec;
 }
 
