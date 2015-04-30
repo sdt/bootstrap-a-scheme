@@ -177,3 +177,15 @@ HANDLER(sub)
 
     return integer_make(result);
 }
+
+HANDLER(vector)
+{
+    GET_ARGS_ALL();
+
+    Pointer vec = vector_make(ARGS_COUNT());
+    for (int i = 0; i < ARGS_COUNT(); i++) {
+        vector_set(vec, i, GET(ARG_INDEX(i)));
+    }
+
+    return vec;
+}

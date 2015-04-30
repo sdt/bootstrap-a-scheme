@@ -10,6 +10,7 @@
     X("*dump*",     dump)           \
     X("empty?",     isEmpty)        \
     X("*gc*",       gc)             \
+    X("vector",     vector)         \
     X("+",          add)            \
     X("-",          sub)            \
     X("<",          lt)             \

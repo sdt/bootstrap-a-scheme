@@ -14,6 +14,18 @@ int args_count(Pointer args)
     return len;
 }
 
+StackIndex args_extract_all(const char* caller, Pointer args)
+{
+    StackIndex before = valuestack_top();
+
+    while (args.type != Type_nil) {
+        PUSH(pair_get(args, 0));
+        args = pair_get(args, 1);
+    }
+
+    return before;
+}
+
 StackIndex args_extract(const char* caller, Pointer args, int min, int max)
 {
     StackIndex before = valuestack_top();
