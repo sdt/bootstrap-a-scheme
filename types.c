@@ -591,8 +591,9 @@ static void value_print(Pointer ptr)
         }
 
         case Type_executor: {
-            printf("executor:%d->", executor_handler(ptr));
+            printf("{X:%d ", executor_handler(ptr));
             value_print(executor_value(ptr));
+            putchar('}');
             break;
         }
 

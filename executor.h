@@ -2,16 +2,12 @@
 #define INCLUDE_EXECUTOR_H
 
 #define EXECUTE_HANDLERS_XLIST \
+    X(apply)            \
     X(define)           \
     X(id)               \
     X(if)               \
     X(lambda)           \
     X(var)
-
-/*
-#define EXECUTE_HANDLERS_XLIST \
-    X(apply)            \
-*/
 
 typedef enum {
     #define X(name) ExecuteHandler_##name,

@@ -35,11 +35,11 @@ bas_is('(if ()   1 2)',    1);
 bas_is('(if nil  1 2)',    1);
 
 note 'lambda';
-bas_is('(lambda a a)',              'lambda:a->a');
-bas_is('(lambda (a) a)',            'lambda:(a)->a');
-bas_is('(lambda () 2)',             'lambda:()->2');
-bas_is('(lambda (a) (+ a a))',      'lambda:(a)->(+ a a)');
-bas_is('(lambda (a b) (+ a b))',    'lambda:(a b)->(+ a b)');
+bas_like('(lambda a a)',              qr/^lambda:a->/);
+bas_like('(lambda (a) a)',            qr/^lambda:\(a\)->/);
+bas_like('(lambda () 2)',             qr/^lambda:\(\)->/);
+bas_like('(lambda (a) (+ a a))',      qr/^lambda:\(a\)->/);
+bas_like('(lambda (a b) (+ a b))',    qr/^lambda:\(a b\)->/);
 
 bas_is('(lambda)',              'lambda: 2 args expected, 0 provided');
 bas_is('(lambda a)',            'lambda: 2 args expected, 1 provided');

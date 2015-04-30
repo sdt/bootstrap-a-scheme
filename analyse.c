@@ -8,6 +8,38 @@
 
 #define POP_RET(expr)   Pointer ret = (expr); POP(); return ret;
 
+static Pointer map_analyse(StackIndex pairIndex)
+{
+    // This should be replaced with a built-in map function.
+    if (GET(pairIndex).type != Type_pair) {
+        return GET(pairIndex);
+    }
+
+    StackIndex carIndex = PUSH(pair_get(GET(pairIndex), 0));
+    SET(carIndex, analyse(carIndex));
+
+    StackIndex cdrIndex = PUSH(pair_get(GET(pairIndex), 1));
+    SET(cdrIndex, map_analyse(cdrIndex));
+
+    Pointer ret = pair_make(carIndex, cdrIndex);
+
+    DROP(2);
+
+    return ret;
+}
+
+static ExecuteHandlerId
+analyse_apply(StackIndex opIndex, StackIndex argsIndex, StackIndex valueIndex)
+{
+    // [ op args ]
+    SET(valueIndex, vector_make(2));
+
+    vector_set(GET(valueIndex), 0, analyse(opIndex));
+    vector_set(GET(valueIndex), 1, map_analyse(argsIndex));
+
+    return ExecuteHandler_apply;
+}
+
 static ExecuteHandlerId
 analyse_define(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
 {
@@ -86,7 +118,7 @@ analyse_list(StackIndex exprIndex, StackIndex valueIndex)
     StackIndex headIndex = PUSH(pair_get(GET(exprIndex), 0));
     StackIndex tailIndex = PUSH(pair_get(GET(exprIndex), 1));
 
-    ExecuteHandlerId handlerId;
+    ExecuteHandlerId handlerId = ExecuteHandler_COUNT;;
 
     Type type = GET(headIndex).type;
     if (type == Type_symbol) {
@@ -101,14 +133,10 @@ analyse_list(StackIndex exprIndex, StackIndex valueIndex)
         else if (util_streq(symbol, "lambda")) {
             handlerId = analyse_lambda(symbol, tailIndex, valueIndex);
         }
-        else {
-            // Default case just return the value.
-            handlerId = analyse_id(exprIndex, valueIndex);
-        }
     }
-    else {
-        // Default case just return the value.
-        handlerId = analyse_id(exprIndex, valueIndex);
+
+    if (handlerId == ExecuteHandler_COUNT) {
+        handlerId = analyse_apply(headIndex, tailIndex, valueIndex);
     }
 
     DROP(2);

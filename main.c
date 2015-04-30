@@ -47,15 +47,24 @@ int main(int argc, char* argv[])
 
 /*
         // Partially implemented executor.
+        print(analyse(astIndex));
         SET(astIndex, executor_execute(analyse(astIndex), envIndex));
+        print(GET(astIndex));
         print(eval(astIndex, envIndex));
 */
-/*
+// /*
         // Executor.
         print(executor_execute(analyse(astIndex), envIndex));
-*/
+// */
+
+
+/*
+        print(analyse(astIndex));
+
         // Fully interpreted.
         print(eval(astIndex, envIndex));
+*/
+
 
         valuestack_drop(2);
     }
