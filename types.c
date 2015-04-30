@@ -497,6 +497,12 @@ unsigned value_fixup(unsigned offset)
             break;
         }
 
+        case Type_executor: {
+            Value_executor* executor = (Value_executor*) base;
+            executor->value = pointer_move(executor->value);
+            break;
+        }
+
         default:
             ASSERT(0, "Unexpected %s value", type_name(type));
             break;
@@ -514,6 +520,10 @@ int value_size(Pointer ptr)
 
     int rawSize = 0;
     switch (ptr.type) {
+        case Type_executor:
+            rawSize = sizeof(Value_executor);
+            break;
+
         case Type_integer:
             rawSize = sizeof(Value_integer);
             break;
