@@ -150,7 +150,7 @@ static void tokeniser_advance(Tokeniser* t)
         Pointer ptr = string_alloc(length);
         char* dest = (char*) string_get(ptr);
         stringEscape(t->cursor, copyChars, &dest);
-        dest[length] = 0;
+        *dest = 0;
 
         // Advance the cursor past the string.
         t->cursor = end + 1;
