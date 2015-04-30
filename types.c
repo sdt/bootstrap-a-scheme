@@ -46,6 +46,12 @@ typedef struct {
 
 typedef struct {
     Value_base base;
+    int size;
+    Pointer value[0];
+} Value_vector;
+
+typedef struct {
+    Value_base base;
     char value[1];  // more space is allocated at the end
 } Value_cstring;    // this is used for strings and symbols
 
@@ -74,6 +80,11 @@ static Pointer type_assert(Pointer ptr, Type expected)
     ASSERT(ptr.type == expected, "Expected %s, got %s",
            type_name(expected), type_name(ptr.type));
     return ptr;
+}
+
+void type_init()
+{
+    ASSERT(Type_COUNT <= (1 << POINTER_TYPE_BITS), "Too many types.");
 }
 
 int type_isObject(Type type)
@@ -339,6 +350,41 @@ Pointer symbol_make(const char* s)
     return ptr;
 }
 
+Pointer vector_get(Pointer ptr, int index)
+{
+    Value_vector* vec = DEREF(ptr, vector);
+    if ((index < 0) || (index >= vec->size)) {
+        THROW("Index %d out of range [0..%d)", index, vec->size);
+    }
+    return vec->value[index];
+}
+
+Pointer vector_set(Pointer ptr, int index, Pointer value)
+{
+    Value_vector* vec = DEREF(ptr, vector);
+    if ((index < 0) || (index >= vec->size)) {
+        THROW("Index %d out of range [0..%d)", index, vec->size);
+    }
+    return vec->value[index] = value;
+}
+
+Pointer vector_make(int size)
+{
+    int totalSize = sizeof(Value_vector) + size * sizeof(Pointer);
+    Value_vector* vec = (Value_vector*) allocateValue(totalSize, Type_vector);
+    vec->size = size;
+    for (int i = 0; i < size; i++) {
+        vec->value[i] = nil_make();
+    }
+    return makePointer(Type_vector, (byte*) vec);
+}
+
+int vector_size(Pointer ptr)
+{
+    Value_vector* vec = DEREF(ptr, vector);
+    return vec->size;
+}
+
 Pointer pointer_move(Pointer oldPtr)
 {
     // Pointer-only objects never need to be moved.
@@ -403,6 +449,14 @@ unsigned value_fixup(unsigned offset)
             // Lets be explicit here so we can catch any screwups.
             break;
 
+        case Type_vector: {
+            Value_vector* vec = (Value_vector*) base;
+            for (int i = 0; i < vec->size; i++) {
+                vec->value[i] = pointer_move(vec->value[i]);
+            }
+            break;
+        }
+
         default:
             ASSERT(0, "Unexpected %s value", type_name(type));
             break;
@@ -439,6 +493,9 @@ int value_size(Pointer ptr)
             rawSize = sizeof(Value_cstring)
                     + strlen(cstring_get(ptr, ptr.type));
             break;
+
+        case Type_vector:
+            return sizeof(Value_vector) + sizeof(Pointer) * vector_size(ptr);
 
         default:
             ASSERT(0, "Unexpected %s value", type_name(ptr.type));
@@ -520,6 +577,16 @@ static void value_print(Pointer ptr)
 
         case Type_symbol: {
             printf("%s", symbol_get(ptr));
+            break;
+        }
+
+        case Type_vector: {
+            printf("(vector");
+            for (int i = 0, size = vector_size(ptr); i < size; i++) {
+                putchar(' ');
+                value_print(vector_get(ptr, i));
+            }
+            putchar(')');
             break;
         }
 

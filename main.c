@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
 
     allocator_init(heapSize);
     valuestack_init(heapSize / 4);
+    type_init();
     env_init();
     symtab_init();
     core_init();

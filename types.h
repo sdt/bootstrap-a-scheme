@@ -15,7 +15,8 @@
     X(lambda)       \
     X(pair)         \
     X(string)       \
-    X(symbol)
+    X(symbol)       \
+    X(vector)
 
 typedef enum {
     #define X(name) Type_##name,
@@ -27,10 +28,16 @@ typedef enum {
     Type_COUNT,
 } Type;
 
+#define POINTER_TOTAL_BITS      32
+#define POINTER_TYPE_BITS        4
+#define POINTER_OFFSET_BITS     (POINTER_TOTAL_BITS-POINTER_TYPE_BITS)
+
 typedef struct _Pointer {
-    unsigned type   :  3;
-    unsigned offset : 29;
+    unsigned type   :  POINTER_TYPE_BITS;
+    unsigned offset :  POINTER_OFFSET_BITS;
 } Pointer;
+
+extern void         type_init();
 
 extern Pointer      boolean_make(int value);
 extern int          boolean_get();
@@ -65,6 +72,11 @@ extern const char*  string_get(Pointer ptr);
 extern Pointer      symbol_alloc(int length);
 extern Pointer      symbol_make(const char* value);
 extern const char*  symbol_get(Pointer ptr);
+
+extern Pointer      vector_get(Pointer ptr, int index);
+extern Pointer      vector_make(int size);
+extern Pointer      vector_set(Pointer ptr, int index, Pointer value);
+extern int          vector_size(Pointer ptr);
 
 extern int          pointer_isFalse(Pointer ptr);
 extern int          pointer_isTrue(Pointer ptr);

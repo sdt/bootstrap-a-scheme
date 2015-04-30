@@ -16,10 +16,6 @@
     X("*",          mul)            \
     X("=",          equals)
 
-/*
-    X("/", div) \
-*/
-
 typedef enum {
     #define X(sym, ident) Core_##ident,
         CORE_HANDLERS_XLIST
