@@ -96,7 +96,7 @@ static const char* stringEscape(const char* s, CharSink* emit, void* context)
 static void countChars(char c, void* context)
 {
     int* count = (void*) context;
-    count++;
+    (*count)++;
 }
 
 static void copyChars(char c, void* context)
