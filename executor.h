@@ -2,6 +2,7 @@
 #define INCLUDE_EXECUTOR_H
 
 #define EXECUTE_HANDLERS_XLIST \
+    X(define)           \
     X(id)               \
     X(var)
 

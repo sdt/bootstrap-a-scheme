@@ -20,6 +20,8 @@ static ExecuteHandler* handlerTable[] = {
     #undef X
 };
 
+#define ARG(n)  vector_get(GET(valueIndex), (n))
+
 Pointer executor_executeHandler(ExecuteHandlerId handlerId,
                                 StackIndex valueIndex, StackIndex envIndex)
 {
@@ -32,10 +34,22 @@ Pointer executor_executeHandler(ExecuteHandlerId handlerId,
 
 HANDLER(id)
 {
-    return vector_get(GET(valueIndex), 0);
+    // [ value ]
+    return ARG(0);
 }
 
 HANDLER(var)
 {
-    return env_get(GET(envIndex), vector_get(GET(valueIndex), 0));
+    // [ symbol ]
+    return env_get(GET(envIndex), ARG(0));
+}
+
+HANDLER(define)
+{
+    // [ symbol executor ]
+    StackIndex valIndex = PUSH(executor_execute(ARG(1), envIndex));
+    StackIndex symIndex = PUSH(ARG(0));
+    env_set(envIndex, symIndex, valIndex);
+    POP();
+    return POP(); // value
 }
