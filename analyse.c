@@ -55,6 +55,22 @@ analyse_if(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
 }
 
 static ExecuteHandlerId
+analyse_lambda(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
+{
+    GET_ARGS_EXACTLY(2);
+
+    // [ params body ]
+    SET(valueIndex, vector_make(2));
+
+    vector_set(GET(valueIndex), 0, GET(ARG_INDEX(0)));
+    vector_set(GET(valueIndex), 1, analyse(ARG_INDEX(1)));
+
+    DROP_ARGS();
+
+    return ExecuteHandler_lambda;
+}
+
+static ExecuteHandlerId
 analyse_var(StackIndex exprIndex, StackIndex valueIndex)
 {
     // [ symbol ]
@@ -81,6 +97,9 @@ analyse_list(StackIndex exprIndex, StackIndex valueIndex)
         }
         else if (util_streq(symbol, "if")) {
             handlerId = analyse_if(symbol, tailIndex, valueIndex);
+        }
+        else if (util_streq(symbol, "lambda")) {
+            handlerId = analyse_lambda(symbol, tailIndex, valueIndex);
         }
         else {
             // Default case just return the value.

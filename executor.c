@@ -56,6 +56,16 @@ HANDLER(if)
     return executor_execute(ARG(resultArg), envIndex);
 }
 
+HANDLER(lambda)
+{
+    // [ params body ]
+    StackIndex paramsIndex = PUSH(ARG(0));
+    StackIndex bodyIndex   = PUSH(ARG(1));
+    Pointer ret = lambda_make(paramsIndex, bodyIndex, envIndex);
+    DROP(2);
+    return ret;
+}
+
 HANDLER(var)
 {
     // [ symbol ]

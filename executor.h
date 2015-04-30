@@ -5,15 +5,12 @@
     X(define)           \
     X(id)               \
     X(if)               \
+    X(lambda)           \
     X(var)
 
 /*
 #define EXECUTE_HANDLERS_XLIST \
     X(apply)            \
-    X(define)           \
-    X(id)               \
-    X(if)               \
-    X(lambda)
 */
 
 typedef enum {
