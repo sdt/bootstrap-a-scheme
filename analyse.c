@@ -9,10 +9,8 @@
 #define POP_RET(expr)   Pointer ret = (expr); POP(); return ret;
 
 static ExecuteHandlerId
-analyse_define(StackIndex argsIndex, StackIndex valueIndex)
+analyse_define(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
 {
-    const char* symbol = "define";
-
     GET_ARGS_EXACTLY(2);
     ARG_CHECKTYPE(0, symbol, "arg 1");
 
@@ -38,6 +36,25 @@ analyse_id(StackIndex exprIndex, StackIndex valueIndex)
 }
 
 static ExecuteHandlerId
+analyse_if(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
+{
+    GET_ARGS_BETWEEN(2, 3);
+    if (ARGS_COUNT() == 2) {
+        PUSH(nil_make());   // push nil as the missing 'else' case
+    }
+
+    // [ cond then else ]
+    SET(valueIndex, vector_make(3));
+    for (int i = 0; i < 3; i++) {
+        vector_set(GET(valueIndex), i, analyse(ARG_INDEX(i)));
+    }
+
+    DROP(3);
+
+    return ExecuteHandler_if;
+}
+
+static ExecuteHandlerId
 analyse_var(StackIndex exprIndex, StackIndex valueIndex)
 {
     // [ symbol ]
@@ -60,7 +77,10 @@ analyse_list(StackIndex exprIndex, StackIndex valueIndex)
         const char* symbol = symbol_get(GET(headIndex));
 
         if (util_streq(symbol, "define")) {
-            handlerId = analyse_define(tailIndex, valueIndex);
+            handlerId = analyse_define(symbol, tailIndex, valueIndex);
+        }
+        else if (util_streq(symbol, "if")) {
+            handlerId = analyse_if(symbol, tailIndex, valueIndex);
         }
         else {
             // Default case just return the value.

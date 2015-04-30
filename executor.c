@@ -32,18 +32,6 @@ Pointer executor_executeHandler(ExecuteHandlerId handlerId,
     return handler(valueIndex, envIndex);
 }
 
-HANDLER(id)
-{
-    // [ value ]
-    return ARG(0);
-}
-
-HANDLER(var)
-{
-    // [ symbol ]
-    return env_get(GET(envIndex), ARG(0));
-}
-
 HANDLER(define)
 {
     // [ symbol executor ]
@@ -52,4 +40,24 @@ HANDLER(define)
     env_set(envIndex, symIndex, valIndex);
     POP();
     return POP(); // value
+}
+
+HANDLER(id)
+{
+    // [ value ]
+    return ARG(0);
+}
+
+HANDLER(if)
+{
+    // [ cond then else ]
+    Pointer cond = executor_execute(ARG(0), envIndex);
+    int resultArg = boolean_get(cond) ? 1 : 2;
+    return executor_execute(ARG(resultArg), envIndex);
+}
+
+HANDLER(var)
+{
+    // [ symbol ]
+    return env_get(GET(envIndex), ARG(0));
 }

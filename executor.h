@@ -4,6 +4,7 @@
 #define EXECUTE_HANDLERS_XLIST \
     X(define)           \
     X(id)               \
+    X(if)               \
     X(var)
 
 /*
