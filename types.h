@@ -3,6 +3,7 @@
 
 #include "allocator.h"
 #include "basetypes.h"
+#include "executor.h"
 
 /* Use an X-macro to define the types. This list will get reused in a number of
  * places. see: http://en.wikipedia.org/wiki/X_Macro
@@ -45,6 +46,12 @@ extern int          boolean_get();
 
 extern Pointer      builtin_apply(Pointer ptr, StackIndex argsIndex, StackIndex envIndex);
 extern Pointer      builtin_make(int index);
+
+extern Pointer      executor_execute(Pointer ptr, StackIndex envIndex);
+extern Pointer      executor_make(ExecuteHandlerId handlerId,
+                                  StackIndex valueIndex);
+extern ExecuteHandlerId executor_handler(Pointer ptr);
+extern Pointer      executor_value(Pointer ptr);
 
 extern Pointer      integer_make(int value);
 extern int          integer_get(Pointer ptr);

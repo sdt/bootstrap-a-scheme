@@ -12,7 +12,7 @@ extern void assert_verbose(int condition, const char* file, int line,
     #define TRACE(...)  do { } while (0)
 
 #else
-
+    #include <stdio.h>
     #define TRACE(...) fprintf(stderr, __VA_ARGS__)
 
 #endif

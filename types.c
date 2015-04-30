@@ -177,6 +177,18 @@ Pointer builtin_apply(Pointer ptr, StackIndex argsIndex, StackIndex envIndex)
     return core_apply(ptr.offset, argsIndex, envIndex);
 }
 
+Pointer executor_execute(Pointer ptr, StackIndex envIndex)
+{
+    Value_executor* raw = DEREF(ptr, executor);
+    StackIndex valueIndex = PUSH(raw->value);
+    //TODO: FIX THIS
+extern Pointer executor_executeHandler(ExecuteHandlerId handlerId,
+                                StackIndex valueIndex, StackIndex envIndex);
+    Pointer ret = executor_executeHandler(raw->handlerId, valueIndex, envIndex);
+    POP();
+    return ret;
+}
+
 Pointer executor_make(ExecuteHandlerId handlerId, StackIndex valueIndex)
 {
     Value_executor* raw = ALLOC(executor);
@@ -581,6 +593,7 @@ static void value_print(Pointer ptr)
         case Type_executor: {
             printf("executor:%d->", executor_handler(ptr));
             value_print(executor_value(ptr));
+            break;
         }
 
         case Type_integer: {
