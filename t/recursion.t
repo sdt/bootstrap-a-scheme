@@ -5,7 +5,7 @@ note 'factorial'; {
     my $expected = 1;
     for (1 .. 10) {
         $expected *= $_;
-        bas_like("$fac\n(fac $_)", qr/\n$expected$/);
+        bas_ends("$fac\n(fac $_)", $expected);
     }
 }
 

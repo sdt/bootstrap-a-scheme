@@ -53,7 +53,7 @@ bas_is('((lambda (a) a) 1)',            1);
 bas_is('((lambda (a b) (+ a b)) 1 2)',  3);
 bas_is('((lambda () 2))',               2);
 my $fac = '(define fac (lambda (n) (if (= n 0) 1 (* n (fac (+ n -1))))))';
-bas_like("$fac\n(fac 6)", qr/\n720/m);
+bas_ends("$fac\n(fac 6)", 720);
 
 bas_is('((lambda () 1) 1)',         'lambda: 0 args expected, 1 provided');
 bas_is('((lambda () 1) 1 2)',       'lambda: 0 args expected, 2 provided');
