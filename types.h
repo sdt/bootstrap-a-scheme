@@ -11,6 +11,7 @@
     X(nil)          \
     X(boolean)      \
     X(builtin)      \
+    X(executor)     \
     X(integer)      \
     X(lambda)       \
     X(pair)         \

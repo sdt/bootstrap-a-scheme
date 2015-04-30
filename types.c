@@ -6,6 +6,7 @@
 #include "debug.h"
 #include "environment.h"
 #include "exception.h"
+#include "executor.h"
 #include "gc.h"
 #include "symtab.h"
 #include "valuestack.h"
@@ -54,6 +55,12 @@ typedef struct {
     Value_base base;
     char value[1];  // more space is allocated at the end
 } Value_cstring;    // this is used for strings and symbols
+
+typedef struct {
+    Value_base base;
+    ExecuteHandlerId handlerId;
+    Pointer value;  // this is a vector
+} Value_executor;
 
 static const char* typeName[] = {
     #define X(name) #name,
@@ -168,6 +175,27 @@ Pointer builtin_apply(Pointer ptr, StackIndex argsIndex, StackIndex envIndex)
 {
     type_assert(ptr, Type_builtin);
     return core_apply(ptr.offset, argsIndex, envIndex);
+}
+
+Pointer executor_make(ExecuteHandlerId handlerId, StackIndex valueIndex)
+{
+    Value_executor* raw = ALLOC(executor);
+    raw->handlerId = handlerId;
+    raw->value    = GET(valueIndex);
+
+    return makePointer(Type_executor, (byte*) raw);
+}
+
+ExecuteHandlerId executor_handler(Pointer ptr)
+{
+    Value_executor* raw = DEREF(ptr, executor);
+    return raw->handlerId;
+}
+
+Pointer executor_value(Pointer ptr)
+{
+    Value_executor* raw = DEREF(ptr, executor);
+    return raw->value;
 }
 
 Pointer integer_make(int value)
@@ -548,6 +576,11 @@ static void value_print(Pointer ptr)
         case Type_builtin: {
             printf("builtin:%d", ptr.offset);
             break;
+        }
+
+        case Type_executor: {
+            printf("executor:%d->", executor_handler(ptr));
+            value_print(executor_value(ptr));
         }
 
         case Type_integer: {
