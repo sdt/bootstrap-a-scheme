@@ -325,10 +325,10 @@ Pointer pair_get(Pointer ptr, int index)
     return raw->value[index];
 }
 
-void pair_set(Pointer ptr, int index, Pointer value)
+void pair_set(StackIndex ptrIndex, int index, Pointer value)
 {
     ASSERT((index & 1) == index, "Pair index must be 0 or 1, not %d", index);
-    Value_pair* raw = DEREF(ptr, pair);
+    Value_pair* raw = DEREF(GET(ptrIndex), pair);
     raw->value[index] = value;
 }
 

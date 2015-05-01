@@ -1,7 +1,7 @@
 #include "gc.h"
 
 #ifdef DEBUG_GC_EVERY_ALLOC
-    #define DEBUG_NO_TRACE 1
+    #define GC_QUIET
 #endif
 
 #include "allocator.h"
@@ -48,14 +48,18 @@ void gc_run()
     }
     in_gc = 1;
 
+#ifndef GC_QUIET
     int before = allocator_bytesAvailable();
+#endif
 
     gc_run_two_fingers();
 
+#ifndef GC_QUIET
     int after = allocator_bytesAvailable();
     TRACE("Garbage collected: %d bytes freed.\n", after - before);
     TRACE("Heap: %d used, %d free. Stack: %d used.\n",
             allocator_bytesUsed(), after, valuestack_top());
+#endif
 
     in_gc = 0;
 }

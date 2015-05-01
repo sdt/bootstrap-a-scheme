@@ -71,7 +71,7 @@ extern Pointer      nil_make();
 
 extern Pointer      pair_make(StackIndex carIndex, StackIndex cdrIndex);
 extern Pointer      pair_get(Pointer ptr, int index);
-extern void         pair_set(Pointer ptr, int index, Pointer val);
+extern void         pair_set(StackIndex ptrIndex, int index, Pointer val);
 
 extern Pointer      string_alloc(int length);
 extern Pointer      string_make(const char* value);

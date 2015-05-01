@@ -57,7 +57,8 @@ void env_set(StackIndex envIndex, StackIndex symIndex, StackIndex valIndex)
     Pointer entry = env_find(GET(envIndex), GET(symIndex));
     if (entry.type != Type_nil) {
         // Just update the existing symbol.
-        pair_set(entry, 1, GET(valIndex));
+        pair_set(PUSH(entry), 1, GET(valIndex));
+        POP();
         return;
     }
 
@@ -66,7 +67,7 @@ void env_set(StackIndex envIndex, StackIndex symIndex, StackIndex valIndex)
     StackIndex oldMapIndex   = PUSH(PAIR_GET(envIndex, 0));
     StackIndex newMapIndex   = PUSH(pair_make(newEntryIndex, oldMapIndex));
 
-    pair_set(GET(envIndex), 0, GET(newMapIndex));
+    pair_set(envIndex, 0, GET(newMapIndex));
 
     DROP(3);
 }
