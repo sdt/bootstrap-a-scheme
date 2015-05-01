@@ -83,7 +83,7 @@ extern const char*  symbol_get(Pointer ptr);
 
 extern Pointer      vector_get(Pointer ptr, int index);
 extern Pointer      vector_make(int size);
-extern Pointer      vector_set(Pointer ptr, int index, Pointer value);
+extern Pointer      vector_set(StackIndex ptrIndex, int index, Pointer value);
 extern int          vector_size(Pointer ptr);
 
 extern int          pointer_isFalse(Pointer ptr);

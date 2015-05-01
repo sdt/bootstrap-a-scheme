@@ -399,9 +399,9 @@ Pointer vector_get(Pointer ptr, int index)
     return vec->value[index];
 }
 
-Pointer vector_set(Pointer ptr, int index, Pointer value)
+Pointer vector_set(StackIndex ptrIndex, int index, Pointer value)
 {
-    Value_vector* vec = DEREF(ptr, vector);
+    Value_vector* vec = DEREF(GET(ptrIndex), vector);
     if ((index < 0) || (index >= vec->size)) {
         THROW("Index %d out of range [0..%d)", index, vec->size);
     }

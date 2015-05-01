@@ -34,8 +34,8 @@ analyse_apply(StackIndex opIndex, StackIndex argsIndex, StackIndex valueIndex)
     // [ op args ]
     SET(valueIndex, vector_make(2));
 
-    vector_set(GET(valueIndex), 0, analyse(opIndex));
-    vector_set(GET(valueIndex), 1, map_analyse(argsIndex));
+    vector_set(valueIndex, 0, analyse(opIndex));
+    vector_set(valueIndex, 1, map_analyse(argsIndex));
 
     return ExecuteHandler_apply;
 }
@@ -49,8 +49,8 @@ analyse_define(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
     // [ symbol executor ]
     SET(valueIndex, vector_make(2));
 
-    vector_set(GET(valueIndex), 0, GET(ARG_INDEX(0)));
-    vector_set(GET(valueIndex), 1, analyse(ARG_INDEX(1)));
+    vector_set(valueIndex, 0, GET(ARG_INDEX(0)));
+    vector_set(valueIndex, 1, analyse(ARG_INDEX(1)));
 
     DROP_ARGS();
 
@@ -62,7 +62,7 @@ analyse_id(StackIndex exprIndex, StackIndex valueIndex)
 {
     // [ value ]
     SET(valueIndex, vector_make(1));
-    vector_set(GET(valueIndex), 0, GET(exprIndex));
+    vector_set(valueIndex, 0, GET(exprIndex));
 
     return ExecuteHandler_id;
 }
@@ -78,7 +78,7 @@ analyse_if(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
     // [ cond then else ]
     SET(valueIndex, vector_make(3));
     for (int i = 0; i < 3; i++) {
-        vector_set(GET(valueIndex), i, analyse(ARG_INDEX(i)));
+        vector_set(valueIndex, i, analyse(ARG_INDEX(i)));
     }
 
     DROP(3);
@@ -94,8 +94,8 @@ analyse_lambda(const char* symbol, StackIndex argsIndex, StackIndex valueIndex)
     // [ params body ]
     SET(valueIndex, vector_make(2));
 
-    vector_set(GET(valueIndex), 0, GET(ARG_INDEX(0)));
-    vector_set(GET(valueIndex), 1, analyse(ARG_INDEX(1)));
+    vector_set(valueIndex, 0, GET(ARG_INDEX(0)));
+    vector_set(valueIndex, 1, analyse(ARG_INDEX(1)));
 
     DROP_ARGS();
 
@@ -107,7 +107,7 @@ analyse_var(StackIndex exprIndex, StackIndex valueIndex)
 {
     // [ symbol ]
     SET(valueIndex, vector_make(1));
-    vector_set(GET(valueIndex), 0, GET(exprIndex));
+    vector_set(valueIndex, 0, GET(exprIndex));
 
     return ExecuteHandler_var;
 }

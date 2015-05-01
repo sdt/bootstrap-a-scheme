@@ -182,13 +182,13 @@ HANDLER(vector)
 {
     GET_ARGS_ALL();
 
-    Pointer vec = vector_make(ARGS_COUNT());
+    StackIndex vecIndex = PUSH(vector_make(ARGS_COUNT()));
     for (int i = 0; i < ARGS_COUNT(); i++) {
-        vector_set(vec, i, GET(ARG_INDEX(i)));
+        vector_set(vecIndex, i, GET(ARG_INDEX(i)));
     }
 
+    Pointer vec = POP();
     DROP_ARGS();
-
     return vec;
 }
 
@@ -207,7 +207,7 @@ HANDLER(vectorSet)
     ARG_CHECKTYPE(0, vector,  "arg 1");
     ARG_CHECKTYPE(1, integer, "arg 2");
 
-    DROP_RET(vector_set(GET(ARG_INDEX(0)),
+    DROP_RET(vector_set(ARG_INDEX(0),
                         integer_get(GET(ARG_INDEX(1))),
                         GET(ARG_INDEX(2))));
 }

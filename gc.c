@@ -1,5 +1,9 @@
 #include "gc.h"
 
+#ifdef DEBUG_GC_EVERY_ALLOC
+    #define DEBUG_NO_TRACE 1
+#endif
+
 #include "allocator.h"
 #include "debug.h"
 #include "valuestack.h"
@@ -49,8 +53,8 @@ void gc_run()
     gc_run_two_fingers();
 
     int after = allocator_bytesAvailable();
-    fprintf(stderr, "Garbage collected: %d bytes freed.\n", after - before);
-    fprintf(stderr, "Heap: %d used, %d free. Stack: %d used.\n",
+    TRACE("Garbage collected: %d bytes freed.\n", after - before);
+    TRACE("Heap: %d used, %d free. Stack: %d used.\n",
             allocator_bytesUsed(), after, valuestack_top());
 
     in_gc = 0;
