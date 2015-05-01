@@ -13,6 +13,9 @@ OBJECTS=$(SOURCES:%.c=%.o)
 CCFLAGS=-Wall -g $(INCPATHS)
 LDFLAGS=-g $(LIBPATHS) -lreadline -lhistory
 
+# CCFLAGS+=-O3
+# LDFLAGS+=-O3
+
 # Optional debug flags
 # CCFLAGS+=-DDEBUG_WIPE_HEAP		# wipe new heap before gc starts
 # CCFLAGS+=-DDEBUG_GC_EVERY_ALLOC	# run a gc before *every* allocation

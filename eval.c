@@ -1,25 +1,48 @@
 #include "eval.h"
+#include "config.h"
 
+#include "analyse.h"
 #include "args.h"
 #include "environment.h"
 #include "exception.h"
+#include "executor.h"
 #include "types.h"
 #include "util.h"
 #include "valuestack.h"
 
-static Pointer do_eval(StackIndex astIndex, StackIndex envInIndex);
-static Pointer eval_list(StackIndex listIndex, StackIndex envIndex);
+static Pointer eval_internal(StackIndex astIndex, StackIndex envInIndex);
 
 Pointer eval(StackIndex astIndex, StackIndex envIndex)
 {
     // Rather than manage the stack inside eval, handle it all here.
     int top = valuestack_top();
-    Pointer ret = do_eval(astIndex, envIndex);
+    Pointer ret = eval_internal(astIndex, envIndex);
     valuestack_popTo(top);
     return ret;
 }
 
-static Pointer do_eval(StackIndex astIndex, StackIndex envInIndex)
+#if EVAL_METHOD == EVAL_INTERPRET
+
+static Pointer eval_list(StackIndex listIndex, StackIndex envIndex)
+{
+    if (GET(listIndex).type == Type_nil) {
+        return GET(listIndex);
+    }
+
+    StackIndex carIndex = PUSH(PAIR_GET(listIndex, 0));
+    StackIndex cdrIndex = PUSH(PAIR_GET(listIndex, 1));
+
+    SET(carIndex, eval(carIndex, envIndex));
+    SET(cdrIndex, eval_list(cdrIndex, envIndex));
+
+    Pointer ret = pair_make(carIndex, cdrIndex);
+
+    DROP(2);
+
+    return ret;
+}
+
+static Pointer eval_internal(StackIndex astIndex, StackIndex envInIndex)
 {
     StackIndex opIndex   = valuestack_reserve();
     StackIndex argsIndex = valuestack_reserve();
@@ -106,21 +129,17 @@ static Pointer do_eval(StackIndex astIndex, StackIndex envInIndex)
     }
 }
 
-static Pointer eval_list(StackIndex listIndex, StackIndex envIndex)
+#elif EVAL_METHOD == EVAL_ANALYSE
+
+static Pointer eval_internal(StackIndex astIndex, StackIndex envIndex)
 {
-    if (GET(listIndex).type == Type_nil) {
-        return GET(listIndex);
-    }
-
-    StackIndex carIndex = PUSH(PAIR_GET(listIndex, 0));
-    StackIndex cdrIndex = PUSH(PAIR_GET(listIndex, 1));
-
-    SET(carIndex, eval(carIndex, envIndex));
-    SET(cdrIndex, eval_list(cdrIndex, envIndex));
-
-    Pointer ret = pair_make(carIndex, cdrIndex);
-
-    DROP(2);
-
-    return ret;
+    Pointer analysed = analyse(astIndex);
+    Pointer evaluated = executor_execute(analysed, envIndex);
+    return evaluated;
 }
+
+#else
+
+#error Unknown evaluation method
+
+#endif

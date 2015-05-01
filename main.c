@@ -1,5 +1,5 @@
 #include "allocator.h"
-#include "analyse.h"
+#include "config.h"
 #include "core.h"
 #include "debug.h"
 #include "environment.h"
@@ -17,6 +17,12 @@
 int main(int argc, char* argv[])
 {
     int heapSize = 64 * 1024;
+
+#if EVAL_METHOD == EVAL_INTERPRET
+    TRACE("Interpret mode.\n");
+#elif EVAL_METHOD == EVAL_ANALYSE
+    TRACE("Analyse/execute mode.\n");
+#endif
 
     allocator_init(heapSize);
     valuestack_init(heapSize / 4);
@@ -45,26 +51,7 @@ int main(int argc, char* argv[])
         StackIndex astIndex = PUSH(readLine(input));
         StackIndex envIndex = PUSH(env_root());
 
-/*
-        // Partially implemented executor.
-        print(analyse(astIndex));
-        SET(astIndex, executor_execute(analyse(astIndex), envIndex));
-        print(GET(astIndex));
         print(eval(astIndex, envIndex));
-*/
-// /*
-        // Executor.
-        print(executor_execute(analyse(astIndex), envIndex));
-// */
-
-
-/*
-        print(analyse(astIndex));
-
-        // Fully interpreted.
-        print(eval(astIndex, envIndex));
-*/
-
 
         valuestack_drop(2);
     }
